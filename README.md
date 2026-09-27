@@ -5,6 +5,7 @@ Personal site. Fonts, 3D libraries, and models are bundled or served from this r
 ## Assets and licences
 
 - **Astronaut model** — [NASA 3D Resources: Astronaut](https://science.nasa.gov/3d-resources/astronaut/) (`public/models/astronaut.glb`, 746 KB glTF with Draco mesh compression and WebP textures). NASA 3D Resources states these files are free to download and use, and without copyright. The catalog credits DigitalSpace Corporation. Self-hosted; the page does not request it from nasa.gov at runtime.
+- **Earth limb photograph** — NASA image `iss040e090540`, Expedition 40 ([images.nasa.gov](https://images.nasa.gov/details/iss040e090540)), public domain. Compressed to `public/models/earth-limb.webp` and served from this site.
 - **Draco decoder** — bundled from Three.js into the site’s own build, so the compressed mesh decodes without a third-party CDN. Draco is Apache-2.0; Three.js is MIT.
 - **Instrument Serif** — italic cut, [SIL Open Font License 1.1](https://scripts.sil.org/OFL), self-hosted through `@fontsource/instrument-serif`.
 - **Black hole** — original WebGL shader in `src/space/blackHole.ts` (accretion disk, Doppler beaming, gravitational lensing). No external texture.

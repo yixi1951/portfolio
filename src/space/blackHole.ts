@@ -11,6 +11,8 @@ void main() {
 }
 `
 
+// Geometric units with M = 1: horizon at r = 2, photon sphere at r = 3.
+// The camera sits on a ray through the origin, so the centre pixel is the shadow.
 const FRAG = `#version 300 es
 precision highp float;
 out vec4 fragColor;
@@ -20,111 +22,134 @@ uniform vec2 uPointer;
 uniform float uZoom;
 uniform float uTime;
 
+const float CAM = 23.0;
+const float DISK_IN = 3.55;
+const float DISK_OUT = 12.5;
+const float HORIZON = 2.02;
+const float PHOTON = 3.0;
+
 vec3 rotY(vec3 p, float a) {
   float c = cos(a), s = sin(a);
   return vec3(c * p.x + s * p.z, p.y, -s * p.x + c * p.z);
 }
-vec3 rotX(vec3 p, float a) {
-  float c = cos(a), s = sin(a);
-  return vec3(p.x, c * p.y - s * p.z, s * p.y + c * p.z);
-}
 
-float hash13(vec3 p) {
-  p = fract(p * 0.1031);
-  p += dot(p, p.yzx + 33.33);
-  return fract((p.x + p.y) * p.z);
+float hash12(vec2 p) {
+  vec3 p3 = fract(vec3(p.xyx) * 0.1031);
+  p3 += dot(p3, p3.yzx + 33.33);
+  return fract((p3.x + p3.y) * p3.z);
 }
 
 vec3 stars(vec3 dir) {
-  vec3 color = vec3(0.015, 0.02, 0.04);
-  float band = exp(-8.0 * dir.y * dir.y);
-  color += vec3(0.22, 0.28, 0.45) * band * (0.35 + 0.25 * dir.x);
+  vec3 color = vec3(0.012, 0.014, 0.024);
+  float phi = atan(dir.z, dir.x);
+  float y = dir.y;
   for (int layer = 0; layer < 2; layer++) {
-    float scale = layer == 0 ? 36.0 : 78.0;
-    vec3 cell = floor(dir * scale + float(layer) * 9.0);
-    float n = hash13(cell);
-    float gate = layer == 0 ? 0.978 : 0.992;
-    float spark = smoothstep(gate, gate + 0.012, n);
-    float tw = 0.55 + 0.45 * sin(uTime * (1.2 + n) + n * 40.0);
-    vec3 tint = mix(vec3(0.72, 0.82, 1.0), vec3(1.0, 0.9, 0.7), hash13(cell + 2.0));
-    color += tint * spark * tw;
+    float scale = layer == 0 ? 34.0 : 72.0;
+    vec2 uv = vec2(phi, y) * scale;
+    vec2 id = floor(uv);
+    vec2 f = fract(uv) - 0.5;
+    float gate = layer == 0 ? 0.93 : 0.975;
+    for (int j = -1; j <= 1; j++) {
+      for (int i = -1; i <= 1; i++) {
+        vec2 cell = id + vec2(float(i), float(j));
+        float n = hash12(cell + float(layer) * 19.7);
+        if (n < gate) continue;
+        vec2 jitter = vec2(hash12(cell + 3.1), hash12(cell + 8.2)) - 0.5;
+        float dist = length(f - vec2(float(i), float(j)) - jitter);
+        float rad = mix(0.035, 0.09, hash12(cell + 1.4));
+        float star = smoothstep(rad, rad * 0.15, dist);
+        float tw = 0.72 + 0.28 * sin(uTime * (0.55 + n) + n * 28.0);
+        vec3 tint = mix(vec3(0.78, 0.86, 1.0), vec3(1.0, 0.94, 0.8), hash12(cell + 5.5));
+        color += tint * star * tw * (layer == 0 ? 1.45 : 0.95);
+      }
+    }
   }
   return color;
 }
 
+vec3 diskHue(float rho, float approach) {
+  float u = clamp((rho - DISK_IN) / (DISK_OUT - DISK_IN), 0.0, 1.0);
+  vec3 col = mix(vec3(1.0, 0.97, 0.9), vec3(1.0, 0.72, 0.08), smoothstep(0.0, 0.32, u));
+  col = mix(col, vec3(1.0, 0.32, 0.02), smoothstep(0.28, 0.92, u));
+  float hot = clamp(0.5 + 0.55 * approach, 0.0, 1.0);
+  col = mix(col, vec3(1.0, 0.97, 0.92), hot * 0.7);
+  return col;
+}
+
 void main() {
   vec2 uv = (gl_FragCoord.xy - 0.5 * uResolution) / uResolution.y;
-  uv += uPointer * 0.06;
-  vec3 rd = normalize(vec3(uv * uZoom, -1.25));
-  vec3 ro = vec3(0.0, 0.72, 4.4);
-  rd = rotX(rd, uAngle.y);
-  ro = rotX(ro, uAngle.y);
-  rd = rotY(rd, uAngle.x);
-  ro = rotY(ro, uAngle.x);
+  uv += uPointer * 0.012;
+  uv.y += 0.035;
 
-  const float rs = 0.62;
-  float h2 = dot(cross(ro, rd), cross(ro, rd));
+  float elev = clamp(0.18 + uAngle.y, 0.05, 1.05);
+  float yaw = uAngle.x;
+  vec3 ro = vec3(0.0, sin(elev), cos(elev)) * CAM;
+  ro = rotY(ro, yaw);
+  vec3 forward = normalize(-ro);
+  vec3 right = normalize(cross(forward, vec3(0.0, 1.0, 0.0)));
+  vec3 up = normalize(cross(right, forward));
+  vec3 rd = normalize(forward * 1.32 + (right * uv.x + up * uv.y) * uZoom);
+
   vec3 p = ro;
   vec3 v = rd;
   vec3 disk = vec3(0.0);
-  float cover = 0.0;
-  bool swallowed = false;
-  float closest = 40.0;
+  bool trapped = false;
+  float closest = 80.0;
+  int hits = 0;
 
   const int STEPS = STEP_COUNT;
   for (int i = 0; i < STEPS; i++) {
-    float r2 = dot(p, p);
-    float r = sqrt(r2);
+    float r = length(p);
     closest = min(closest, r);
-    if (r < rs) {
-      swallowed = true;
+    if (r < HORIZON) {
+      trapped = true;
       break;
     }
-    if (r > 16.0) break;
-    float dt = 0.045 * clamp(r, 0.25, 2.4);
-    vec3 acc = -1.5 * rs * h2 * p / (r2 * r2 * r);
-    vec3 v2 = normalize(v + acc * dt);
-    vec3 p2 = p + v2 * dt;
+    if (i > 8 && dot(v, p) > 0.0 && r > CAM * 1.45) break;
 
-    if (p.y * p2.y < 0.0 && cover < 0.97) {
-      float t = clamp(p.y / (p.y - p2.y), 0.0, 1.0);
-      vec3 hit = mix(p, p2, t);
+    float h2 = dot(cross(p, v), cross(p, v));
+    vec3 acc = -1.5 * h2 * p / pow(r, 5.0);
+    float accel = length(acc);
+    float dt = 0.24;
+    if (accel > 1e-4) dt = min(dt, 0.2 / accel);
+    dt = clamp(dt, 0.01, 0.34);
+
+    v = normalize(v + acc * dt);
+    vec3 next = p + v * dt;
+
+    if (hits < 2 && p.y * next.y < 0.0) {
+      float t = clamp(p.y / (p.y - next.y), 0.0, 1.0);
+      vec3 hit = mix(p, next, t);
       float rho = length(hit.xz);
-      float inner = rs * 2.35;
-      float outer = 6.4;
-      if (rho > inner && rho < outer) {
-        vec3 tangent = vec3(-hit.z, 0.0, hit.x) / max(rho, 0.001);
-        float beta = clamp(0.78 * sqrt(inner / rho), 0.05, 0.86);
-        float cosRel = dot(v2, tangent);
-        float doppler = sqrt(max(1.0 - beta * beta, 0.001)) / max(1.0 - beta * cosRel, 0.06);
-        float heat = pow(inner / rho, 0.72);
-        vec3 base = mix(vec3(0.55, 0.08, 0.02), vec3(1.0, 0.82, 0.48), heat);
-        base *= mix(vec3(1.35, 0.62, 0.32), vec3(0.55, 0.75, 1.35), smoothstep(-0.2, 0.8, cosRel));
+      if (rho > DISK_IN && rho < DISK_OUT) {
+        hits += 1;
+        vec3 tangent = vec3(-hit.z, 0.0, hit.x) / rho;
+        float approach = clamp(-dot(v, tangent), -1.0, 1.0);
+        float beta = clamp(0.72 * sqrt(DISK_IN / rho), 0.0, 0.78);
+        float doppler = pow(clamp(1.0 + 0.38 * beta * approach, 0.78, 1.55), 1.7);
+        float radial = pow(DISK_IN / rho, 1.55);
+        float edge = smoothstep(DISK_IN, DISK_IN + 0.12, rho) * smoothstep(DISK_OUT, DISK_OUT - 3.6, rho);
         float phi = atan(hit.z, hit.x);
-        float turb = 0.62 + 0.38 * sin(phi * 9.0 - rho * 3.1 + uTime * 0.7);
-        turb *= 0.75 + 0.25 * sin(phi * 3.0 + rho * 5.0 - uTime * 0.35);
-        float edge = smoothstep(inner, inner + 0.18, rho) * smoothstep(outer, outer - 1.6, rho);
-        float inten = pow(doppler, 3.0) * (0.22 + 1.15 * heat) * turb * edge;
-        disk += base * inten * (1.0 - cover);
-        cover = clamp(cover + inten * 0.35, 0.0, 1.0);
+        float grain = 0.92 + 0.08 * sin(phi * 2.0 + rho * 0.18 - uTime * 0.12);
+        float weight = hits == 1 ? 1.0 : 0.8;
+        float inten = radial * doppler * edge * grain * weight * 5.4;
+        disk += diskHue(rho, approach) * inten;
       }
     }
-    p = p2;
-    v = v2;
+    p = next;
   }
 
   vec3 color = vec3(0.0);
-  if (!swallowed) {
-    color = stars(normalize(v));
-    float photon = exp(-pow((closest - rs * 1.5) * 14.0, 2.0));
-    color += vec3(1.0, 0.86, 0.55) * photon * 1.8;
-    float glow = exp(-pow((closest - rs) * 3.2, 2.0)) * 0.25;
-    color += vec3(1.0, 0.45, 0.15) * glow;
+  if (!trapped) {
+    color = stars(normalize(v)) * smoothstep(2.4, 3.5, closest);
+    float ring = exp(-pow((closest - PHOTON) / 0.02, 2.0));
+    color += vec3(1.45, 1.38, 1.22) * ring * 4.0;
   }
   color += disk;
-  vec2 q = gl_FragCoord.xy / uResolution - 0.5;
-  color *= smoothstep(0.85, 0.2, length(q));
-  color = color / (1.0 + color * 0.65);
+
+  float vig = smoothstep(1.35, 0.55, length(uv));
+  color *= mix(0.92, 1.0, vig);
+  color = 1.0 - exp(-color * 1.08);
   fragColor = vec4(pow(max(color, 0.0), vec3(0.92)), 1.0);
 }
 `
@@ -154,7 +179,7 @@ export function mountBlackHole(host: HTMLElement, options: BlackHoleOptions) {
     return () => {}
   }
 
-  const steps = options.mobile ? 42 : 88
+  const steps = options.mobile ? 72 : 150
   const frag = FRAG.replace('STEP_COUNT', String(steps))
   const vs = compile(gl, gl.VERTEX_SHADER, VERT)
   const fs = compile(gl, gl.FRAGMENT_SHADER, frag)
@@ -192,8 +217,8 @@ export function mountBlackHole(host: HTMLElement, options: BlackHoleOptions) {
   const uTime = gl.getUniformLocation(program, 'uTime')
 
   const state = {
-    yaw: 0.15,
-    pitch: 0.58,
+    yaw: 0,
+    pitch: 0,
     zoom: 1,
     pointerX: 0,
     pointerY: 0,
@@ -206,7 +231,7 @@ export function mountBlackHole(host: HTMLElement, options: BlackHoleOptions) {
 
   const resize = () => {
     const rect = host.getBoundingClientRect()
-    const dpr = options.mobile ? 0.8 : Math.min(window.devicePixelRatio || 1, 1.35)
+    const dpr = options.mobile ? 0.85 : Math.min(window.devicePixelRatio || 1, 1.5)
     const width = Math.max(1, Math.floor(rect.width * dpr))
     const height = Math.max(1, Math.floor(rect.height * dpr))
     if (canvas.width !== width || canvas.height !== height) {
@@ -239,7 +264,7 @@ export function mountBlackHole(host: HTMLElement, options: BlackHoleOptions) {
     const rect = host.getBoundingClientRect()
     const mid = rect.top + rect.height / 2
     const t = (window.innerHeight * 0.5 - mid) / window.innerHeight
-    state.zoom = Math.min(1.45, Math.max(0.72, 1.05 - t * 0.55))
+    state.zoom = Math.min(1.12, Math.max(0.88, 1 - t * 0.18))
   }
 
   const onPointerDown = (event: PointerEvent) => {
@@ -257,8 +282,8 @@ export function mountBlackHole(host: HTMLElement, options: BlackHoleOptions) {
     state.pointerX = ((event.clientX - rect.left) / rect.width) * 2 - 1
     state.pointerY = ((event.clientY - rect.top) / rect.height) * 2 - 1
     if (!state.dragging) return
-    state.yaw += (event.clientX - state.lastX) * 0.006
-    state.pitch = Math.max(-1.15, Math.min(1.15, state.pitch + (event.clientY - state.lastY) * 0.005))
+    state.yaw += (event.clientX - state.lastX) * 0.005
+    state.pitch = Math.max(-0.85, Math.min(0.85, state.pitch + (event.clientY - state.lastY) * 0.004))
     state.lastX = event.clientX
     state.lastY = event.clientY
     if (options.reduced) {

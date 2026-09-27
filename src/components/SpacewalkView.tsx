@@ -61,7 +61,7 @@ function AstronautPoster({ reduced }: { reduced: boolean }) {
       alt=""
       width={960}
       height={540}
-      className="absolute inset-0 h-full w-full object-contain object-right px-6 touch-none"
+      className="absolute inset-0 h-full w-full object-cover object-center touch-none"
       draggable={false}
     />
   )
