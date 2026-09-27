@@ -1,3 +1,18 @@
+# 杨子烽 / Yang Zifeng
+
+Personal site. Fonts, 3D libraries, and models are bundled or served from this repository. Nothing in the portfolio shell is loaded from a CDN or from Google Fonts.
+
+## Assets and licences
+
+- **Astronaut model** — [NASA 3D Resources: Astronaut](https://science.nasa.gov/3d-resources/astronaut/) (`public/models/astronaut.glb`, 746 KB glTF with Draco mesh compression and WebP textures). NASA 3D Resources states these files are free to download and use, and without copyright. The catalog credits DigitalSpace Corporation. Self-hosted; the page does not request it from nasa.gov at runtime.
+- **Draco decoder** — bundled from Three.js into the site’s own build, so the compressed mesh decodes without a third-party CDN. Draco is Apache-2.0; Three.js is MIT.
+- **Instrument Serif** — italic cut, [SIL Open Font License 1.1](https://scripts.sil.org/OFL), self-hosted through `@fontsource/instrument-serif`.
+- **Black hole** — original WebGL shader in `src/space/blackHole.ts` (accretion disk, Doppler beaming, gravitational lensing). No external texture.
+
+On phones and when `prefers-reduced-motion` is set, the spacewalk uses a still poster (`public/models/astronaut-poster.webp`) with drag-to-yaw instead of the WebGL model. The black hole still runs, with fewer ray steps and no continuous disk animation when motion is reduced.
+
+The separate study page at `/math1/` is the author’s own HTML file and still loads MathJax and Plotly from their CDNs.
+
 # React + TypeScript + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
