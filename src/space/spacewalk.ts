@@ -2,6 +2,8 @@ import * as THREE from 'three'
 import { DRACOLoader } from 'three/addons/loaders/DRACOLoader.js'
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js'
 
+const EARTH_ASPECT = 1200 / 798
+
 export type SpacewalkOptions = {
   reduced: boolean
 }
@@ -11,6 +13,71 @@ const EARTH_URL = '/models/earth-limb.webp'
 const FOV = 26
 const WORLD_HEIGHT = 1.62
 const FILL = 0.56
+
+function relaxArms(root: THREE.Object3D) {
+  root.updateWorldMatrix(true, true)
+  const box = new THREE.Box3().setFromObject(root)
+  const size = box.getSize(new THREE.Vector3())
+  const shoulderY = box.min.y + size.y * 0.78
+  const shoulderX = size.x * 0.22
+  const armReach = Math.max(size.x * 0.5 - shoulderX, 0.001)
+  const height = Math.max(size.y, 0.001)
+
+  root.traverse((child) => {
+    if (!(child instanceof THREE.Mesh)) return
+    const attr = child.geometry.getAttribute('position')
+    if (!attr) return
+    const inverse = child.matrixWorld.clone().invert()
+    const point = new THREE.Vector3()
+    for (let index = 0; index < attr.count; index += 1) {
+      point.fromBufferAttribute(attr, index).applyMatrix4(child.matrixWorld)
+      const side = point.x < 0 ? -1 : 1
+      const outward = Math.abs(point.x) - shoulderX
+      const height01 = (point.y - box.min.y) / height
+      const arm = outward > 0 && height01 > 0.4 && height01 < 0.9 && point.z > box.min.z + size.z * 0.2
+      if (arm) {
+        const t = THREE.MathUtils.clamp(outward / armReach, 0, 1)
+        let angle = 1.35 * Math.sqrt(t)
+        if (t > 0.38) angle += 1.15 * ((t - 0.38) / 0.62)
+        const ca = Math.cos(-side * angle)
+        const sa = Math.sin(-side * angle)
+        const pivotX = side * shoulderX
+        const dx = point.x - pivotX
+        const dy = point.y - shoulderY
+        point.x = pivotX + ca * dx - sa * dy
+        point.y = shoulderY + sa * dx + ca * dy
+        point.z -= Math.sin(angle) * height * 0.055 * t
+      }
+      point.applyMatrix4(inverse)
+      attr.setXYZ(index, point.x, point.y, point.z)
+    }
+    attr.needsUpdate = true
+    child.geometry.computeVertexNormals()
+    child.geometry.computeBoundingBox()
+    child.geometry.computeBoundingSphere()
+  })
+}
+
+function makeEnvironment(renderer: THREE.WebGLRenderer) {
+  const pmrem = new THREE.PMREMGenerator(renderer)
+  const env = new THREE.Scene()
+  env.add(new THREE.Mesh(new THREE.SphereGeometry(12, 20, 14), new THREE.MeshBasicMaterial({ color: 0x070b14, side: THREE.BackSide })))
+  const earthGlow = new THREE.Mesh(new THREE.SphereGeometry(5, 24, 16), new THREE.MeshBasicMaterial({ color: 0x2a6eb8 }))
+  earthGlow.position.set(-1.5, -6.5, 1)
+  const sun = new THREE.Mesh(new THREE.SphereGeometry(1.1, 16, 12), new THREE.MeshBasicMaterial({ color: 0xfff4d2 }))
+  sun.position.set(5, 4.2, 3)
+  env.add(earthGlow, sun)
+  const map = pmrem.fromScene(env, 0.04).texture
+  pmrem.dispose()
+  env.traverse((object) => {
+    const mesh = object as THREE.Mesh
+    if (!mesh.isMesh) return
+    mesh.geometry.dispose()
+    const material = mesh.material
+    if (material instanceof THREE.Material) material.dispose()
+  })
+  return map
+}
 
 function makeStarTexture() {
   const canvas = document.createElement('canvas')
@@ -70,12 +137,12 @@ export function mountSpacewalk(host: HTMLElement, options: SpacewalkOptions) {
   )
   scene.add(sky)
 
-  const earth = new THREE.Mesh(
-    new THREE.PlaneGeometry(1, 1),
-    new THREE.MeshBasicMaterial({ transparent: true, depthWrite: false, color: 0xffffff }),
-  )
+  scene.environment = makeEnvironment(renderer)
+
+  const earthMaterial = new THREE.MeshBasicMaterial({ transparent: true, depthWrite: false, color: 0xffffff })
+  const earth = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), earthMaterial)
   earth.visible = false
-  earth.position.set(0.15, -0.35, -2.6)
+  earth.position.set(0, 0, -3.2)
   scene.add(earth)
 
   const modelRoot = new THREE.Group()
@@ -101,14 +168,24 @@ export function mountSpacewalk(host: HTMLElement, options: SpacewalkOptions) {
   }
 
   const placeEarth = () => {
-    const earthZ = -2.6
-    const dist = camera.position.z - earthZ
+    const earthZ = -3.2
+    const dist = Math.max(0.4, camera.position.z - earthZ)
     const visH = 2 * Math.tan((camera.fov * Math.PI) / 180 / 2) * dist
-    const photoAspect = 1200 / 798
-    const planeH = visH * 1.45
-    const planeW = Math.max(planeH * photoAspect, visH * camera.aspect * 1.05)
-    earth.scale.set(planeW, planeH, 1)
-    earth.position.y = -visH * 0.18
+    const visW = visH * Math.max(camera.aspect, 0.1)
+    earth.scale.set(visW, visH, 1)
+    earth.position.set(0, -visH * 0.06, earthZ)
+    const map = earthMaterial.map
+    if (!map) return
+    const viewAspect = visW / visH
+    if (EARTH_ASPECT > viewAspect) {
+      const repeatX = viewAspect / EARTH_ASPECT
+      map.repeat.set(repeatX, 1)
+      map.offset.set((1 - repeatX) * 0.5, 0)
+    } else {
+      const repeatY = EARTH_ASPECT / viewAspect
+      map.repeat.set(1, repeatY)
+      map.offset.set(0, (1 - repeatY) * 0.18)
+    }
   }
 
   const frameCamera = () => {
@@ -125,6 +202,8 @@ export function mountSpacewalk(host: HTMLElement, options: SpacewalkOptions) {
       return
     }
     texture.colorSpace = THREE.SRGBColorSpace
+    texture.wrapS = THREE.ClampToEdgeWrapping
+    texture.wrapT = THREE.ClampToEdgeWrapping
     texture.anisotropy = renderer.capabilities.getMaxAnisotropy()
     const material = earth.material as THREE.MeshBasicMaterial
     material.map = texture
@@ -138,6 +217,7 @@ export function mountSpacewalk(host: HTMLElement, options: SpacewalkOptions) {
     (gltf) => {
       if (disposed) return
       const model = gltf.scene
+      relaxArms(model)
       const box = new THREE.Box3().setFromObject(model)
       const size = box.getSize(new THREE.Vector3())
       const center = box.getCenter(new THREE.Vector3())
@@ -152,10 +232,20 @@ export function mountSpacewalk(host: HTMLElement, options: SpacewalkOptions) {
           material.emissiveMap = null
           material.emissive = new THREE.Color(0x000000)
           material.emissiveIntensity = 0
-          material.roughness = Math.min(material.roughness, 0.62)
-          material.metalness = Math.max(material.metalness, 0.05)
-          material.envMapIntensity = 0.2
           material.side = THREE.FrontSide
+          const visor = material.name === 'astnt1_2'
+          if (visor) {
+            material.color.set(0xffc45a)
+            material.map = null
+            material.metalness = 1
+            material.roughness = 0.08
+            material.envMapIntensity = 1.4
+          } else {
+            material.color.set(0xffffff)
+            material.metalness = 0.12
+            material.roughness = 0.78
+            material.envMapIntensity = 0.45
+          }
         }
       })
       modelRoot.add(model)
@@ -179,12 +269,13 @@ export function mountSpacewalk(host: HTMLElement, options: SpacewalkOptions) {
       camera.updateProjectionMatrix()
     }
     const t = options.reduced ? 0 : now * 0.001
-    const driftYaw = state.dragging ? 0 : Math.sin(t * 0.22) * 0.045
-    const driftRoll = state.dragging ? 0 : Math.sin(t * 0.37) * 0.03
-    const driftY = state.dragging ? 0 : Math.sin(t * 0.55) * 0.04
+    const driftYaw = state.dragging ? 0 : t * 0.18
+    const driftRoll = state.dragging ? 0 : Math.sin(t * 0.35) * 0.035
+    const driftY = state.dragging ? 0 : Math.sin(t * 0.5) * 0.045
+    modelRoot.rotation.order = 'YXZ'
     modelRoot.rotation.y = state.yaw + driftYaw
-    modelRoot.rotation.x = state.pitch
-    modelRoot.rotation.z = driftRoll
+    modelRoot.rotation.x = -0.22 + state.pitch
+    modelRoot.rotation.z = 0.32 + driftRoll
     modelRoot.position.set(state.pointerX * 0.04, driftY - state.pointerY * 0.03, 0)
     rim.intensity = state.hover ? 5.0 : 3.6
     key.intensity = state.hover ? 7.4 : 6.4

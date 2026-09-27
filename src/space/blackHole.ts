@@ -11,8 +11,9 @@ void main() {
 }
 `
 
-// Geometric units with M = 1: horizon at r = 2, photon sphere at r = 3.
-// The camera sits on a ray through the origin, so the centre pixel is the shadow.
+// Geometric units, M = 1. The shadow is the critical impact parameter (a circle).
+// The disk is one connected image: a thin arc over the top, the near disk below,
+// joined at the sides, with the photon ring as their shared inner edge.
 const FRAG = `#version 300 es
 precision highp float;
 out vec4 fragColor;
@@ -22,11 +23,10 @@ uniform vec2 uPointer;
 uniform float uZoom;
 uniform float uTime;
 
-const float CAM = 23.0;
-const float DISK_IN = 3.55;
-const float DISK_OUT = 12.5;
-const float HORIZON = 2.02;
-const float PHOTON = 3.0;
+const float CAM = 34.0;
+const float FOCAL = 1.38;
+const float BC = 5.196152;
+const float RS = 2.04;
 
 vec3 rotY(vec3 p, float a) {
   float c = cos(a), s = sin(a);
@@ -67,90 +67,81 @@ vec3 stars(vec3 dir) {
   return color;
 }
 
-vec3 diskHue(float rho, float approach) {
-  float u = clamp((rho - DISK_IN) / (DISK_OUT - DISK_IN), 0.0, 1.0);
-  vec3 col = mix(vec3(1.0, 0.97, 0.9), vec3(1.0, 0.72, 0.08), smoothstep(0.0, 0.32, u));
-  col = mix(col, vec3(1.0, 0.32, 0.02), smoothstep(0.28, 0.92, u));
-  float hot = clamp(0.5 + 0.55 * approach, 0.0, 1.0);
-  col = mix(col, vec3(1.0, 0.97, 0.92), hot * 0.7);
-  return col;
+vec3 bend(vec3 p, vec3 v) {
+  float r2 = max(dot(p, p), 1e-4);
+  float r = sqrt(r2);
+  float xv = dot(p, v);
+  return -(1.0 / (r * r2)) * (p - 4.0 * xv * v + 3.0 * xv * xv / r2 * p);
 }
 
 void main() {
-  vec2 uv = (gl_FragCoord.xy - 0.5 * uResolution) / uResolution.y;
-  uv += uPointer * 0.012;
-  uv.y += 0.035;
+  vec2 q = (gl_FragCoord.xy - 0.5 * uResolution) / uResolution.y;
+  q += uPointer * 0.01;
 
-  float elev = clamp(0.18 + uAngle.y, 0.05, 1.05);
+  float elev = clamp(0.24 + uAngle.y, 0.08, 0.9);
   float yaw = uAngle.x;
   vec3 ro = vec3(0.0, sin(elev), cos(elev)) * CAM;
   ro = rotY(ro, yaw);
   vec3 forward = normalize(-ro);
   vec3 right = normalize(cross(forward, vec3(0.0, 1.0, 0.0)));
   vec3 up = normalize(cross(right, forward));
-  vec3 rd = normalize(forward * 1.32 + (right * uv.x + up * uv.y) * uZoom);
+  vec3 rd = normalize(forward * FOCAL + (right * q.x + up * q.y) * uZoom);
+  float b = length(cross(ro, rd));
+
+  float k = BC / CAM;
+  float shadowR = (FOCAL / uZoom) * k / sqrt(max(1.0 - k * k, 0.2));
+  float s = length(q);
+
+  if (b < BC - 0.02) {
+    fragColor = vec4(0.0, 0.0, 0.0, 1.0);
+    return;
+  }
 
   vec3 p = ro;
   vec3 v = rd;
-  vec3 disk = vec3(0.0);
   bool trapped = false;
-  float closest = 80.0;
-  int hits = 0;
-
   const int STEPS = STEP_COUNT;
   for (int i = 0; i < STEPS; i++) {
     float r = length(p);
-    closest = min(closest, r);
-    if (r < HORIZON) {
+    if (r < RS) {
       trapped = true;
       break;
     }
-    if (i > 8 && dot(v, p) > 0.0 && r > CAM * 1.45) break;
-
-    float h2 = dot(cross(p, v), cross(p, v));
-    vec3 acc = -1.5 * h2 * p / pow(r, 5.0);
+    if (i > 12 && dot(v, p) > 0.0 && r > CAM * 1.25) break;
+    vec3 acc = bend(p, v);
     float accel = length(acc);
-    float dt = 0.24;
-    if (accel > 1e-4) dt = min(dt, 0.2 / accel);
-    dt = clamp(dt, 0.01, 0.34);
-
-    v = normalize(v + acc * dt);
-    vec3 next = p + v * dt;
-
-    if (hits < 2 && p.y * next.y < 0.0) {
-      float t = clamp(p.y / (p.y - next.y), 0.0, 1.0);
-      vec3 hit = mix(p, next, t);
-      float rho = length(hit.xz);
-      if (rho > DISK_IN && rho < DISK_OUT) {
-        hits += 1;
-        vec3 tangent = vec3(-hit.z, 0.0, hit.x) / rho;
-        float approach = clamp(-dot(v, tangent), -1.0, 1.0);
-        float beta = clamp(0.72 * sqrt(DISK_IN / rho), 0.0, 0.78);
-        float doppler = pow(clamp(1.0 + 0.38 * beta * approach, 0.78, 1.55), 1.7);
-        float radial = pow(DISK_IN / rho, 1.55);
-        float edge = smoothstep(DISK_IN, DISK_IN + 0.12, rho) * smoothstep(DISK_OUT, DISK_OUT - 3.6, rho);
-        float phi = atan(hit.z, hit.x);
-        float grain = 0.92 + 0.08 * sin(phi * 2.0 + rho * 0.18 - uTime * 0.12);
-        float weight = hits == 1 ? 1.0 : 0.8;
-        float inten = radial * doppler * edge * grain * weight * 5.4;
-        disk += diskHue(rho, approach) * inten;
-      }
-    }
-    p = next;
+    float speed = max(length(v), 1e-3);
+    float dt = clamp(0.16 * speed / max(accel, 1e-3), 0.004, 0.12);
+    vec3 vMid = v + acc * dt * 0.5;
+    vec3 pMid = p + v * dt * 0.5;
+    v += bend(pMid, vMid) * dt;
+    p += v * dt;
   }
 
-  vec3 color = vec3(0.0);
-  if (!trapped) {
-    color = stars(normalize(v)) * smoothstep(2.4, 3.5, closest);
-    float ring = exp(-pow((closest - PHOTON) / 0.02, 2.0));
-    color += vec3(1.45, 1.38, 1.22) * ring * 4.0;
-  }
-  color += disk;
+  vec3 color = trapped ? vec3(0.0) : stars(normalize(v));
 
-  float vig = smoothstep(1.35, 0.55, length(uv));
-  color *= mix(0.92, 1.0, vig);
-  color = 1.0 - exp(-color * 1.08);
-  fragColor = vec4(pow(max(color, 0.0), vec3(0.92)), 1.0);
+  float ring = exp(-pow((b - BC) / 0.17, 2.0));
+  color += vec3(1.0, 0.98, 0.94) * ring * 2.6;
+
+  float psi = atan(q.x, -q.y);
+  float down = pow(clamp(0.5 + 0.5 * cos(psi), 0.0, 1.0), 0.72);
+  float outer = shadowR * mix(1.34, 4.15, down);
+  float inner = shadowR * 1.018;
+  float band = smoothstep(inner, inner + shadowR * 0.035, s) * smoothstep(outer, outer - shadowR * 0.55, s);
+  float heat = exp(-2.4 * clamp((s - inner) / max(outer - inner, 1e-3), 0.0, 1.0));
+  float cYaw = cos(yaw);
+  float sYaw = sin(yaw);
+  float side = (cYaw * q.x - sYaw * q.y) / max(shadowR, 1e-3);
+  float approach = clamp(side, -1.0, 1.0);
+  vec3 hue = mix(vec3(1.0, 0.97, 0.9), vec3(1.0, 0.68, 0.06), smoothstep(0.0, 0.42, 1.0 - heat));
+  hue = mix(hue, vec3(0.92, 0.3, 0.02), smoothstep(0.35, 1.0, 1.0 - heat));
+  hue = mix(hue, vec3(1.0, 0.98, 0.94), clamp(approach, 0.0, 1.0) * 0.55);
+  float doppler = pow(clamp(1.0 + 0.42 * approach, 0.62, 1.55), 1.6);
+  float grain = 0.94 + 0.06 * sin(psi * 2.0 - uTime * 0.15 + s * 8.0);
+  color += hue * band * (0.45 + 3.1 * heat) * doppler * grain;
+
+  color = 1.0 - exp(-color * 1.05);
+  fragColor = vec4(pow(max(color, 0.0), vec3(0.94)), 1.0);
 }
 `
 
@@ -179,7 +170,7 @@ export function mountBlackHole(host: HTMLElement, options: BlackHoleOptions) {
     return () => {}
   }
 
-  const steps = options.mobile ? 72 : 150
+  const steps = options.mobile ? 36 : 64
   const frag = FRAG.replace('STEP_COUNT', String(steps))
   const vs = compile(gl, gl.VERTEX_SHADER, VERT)
   const fs = compile(gl, gl.FRAGMENT_SHADER, frag)
