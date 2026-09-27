@@ -1,5 +1,7 @@
 import { profile } from '../data/profile'
 import { useI18n } from '../i18n-context'
+import { OrbitTrail } from './OrbitTrail'
+import { Reveal } from './Reveal'
 
 export function About() {
   const { lang } = useI18n()
@@ -7,7 +9,8 @@ export function About() {
   return (
     <section id="about" className="scroll-mt-24 px-4 py-4 md:px-6">
       <div className="mx-auto grid max-w-6xl gap-4 lg:grid-cols-12">
-        <div className="rounded-3xl border border-white/10 bg-[#10131a] p-6 sm:p-8 lg:col-span-7">
+        <Reveal className="lg:col-span-7">
+        <div className="h-full rounded-3xl border border-white/10 bg-[#10131a] p-6 sm:p-8">
           <p className="text-xs font-medium uppercase tracking-[0.22em] text-zinc-400">
             {lang === 'zh' ? '关于' : 'About'}
           </p>
@@ -17,8 +20,10 @@ export function About() {
           <p className="mt-5 text-base leading-relaxed text-zinc-300">{profile.bio[lang]}</p>
           <p className="mt-4 text-sm leading-relaxed text-zinc-400">{profile.intent[lang]}</p>
         </div>
+        </Reveal>
 
-        <div className="rounded-3xl border border-white/10 bg-[#10131a] p-6 sm:p-8 lg:col-span-5">
+        <Reveal className="lg:col-span-5" delay={0.08}>
+        <div className="h-full rounded-3xl border border-white/10 bg-[#10131a] p-6 sm:p-8">
           <p className="text-xs font-medium uppercase tracking-[0.22em] text-zinc-400">
             {lang === 'zh' ? '课程' : 'Coursework'}
           </p>
@@ -40,8 +45,10 @@ export function About() {
             ))}
           </div>
         </div>
+        </Reveal>
 
-        <div className="rounded-3xl border border-white/10 bg-[#10131a] p-6 sm:p-7 lg:col-span-4">
+        <Reveal className="lg:col-span-4" delay={0.05}>
+        <div className="h-full rounded-3xl border border-white/10 bg-[#10131a] p-6 sm:p-7">
           <p className="text-xs font-medium uppercase tracking-[0.22em] text-zinc-400">
             {lang === 'zh' ? '荣誉' : 'Honors'}
           </p>
@@ -53,8 +60,10 @@ export function About() {
             ))}
           </ul>
         </div>
+        </Reveal>
 
-        <div className="rounded-3xl border border-white/10 bg-[#10131a] p-6 sm:p-7 lg:col-span-5">
+        <Reveal className="lg:col-span-5" delay={0.1}>
+        <div className="h-full rounded-3xl border border-white/10 bg-[#10131a] p-6 sm:p-7">
           <p className="text-xs font-medium uppercase tracking-[0.22em] text-zinc-400">
             {lang === 'zh' ? '学生工作' : 'Student role'}
           </p>
@@ -68,8 +77,10 @@ export function About() {
             ))}
           </ul>
         </div>
+        </Reveal>
 
-        <div className="rounded-3xl border border-white/10 bg-[#10131a] p-6 sm:p-7 lg:col-span-3">
+        <Reveal className="lg:col-span-3" delay={0.14}>
+        <div className="h-full rounded-3xl border border-white/10 bg-[#10131a] p-6 sm:p-7">
           <p className="text-xs font-medium uppercase tracking-[0.22em] text-zinc-400">
             {lang === 'zh' ? '此外' : 'Also'}
           </p>
@@ -78,6 +89,9 @@ export function About() {
             {profile.degree[lang]} · {profile.location[lang]}
           </p>
         </div>
+        </Reveal>
+
+        <OrbitTrail />
       </div>
     </section>
   )

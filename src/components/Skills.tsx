@@ -1,5 +1,6 @@
 import { skillGroups } from '../data/profile'
 import { useI18n } from '../i18n-context'
+import { Constellation } from './Constellation'
 
 export function Skills() {
   const { lang } = useI18n()
@@ -18,6 +19,8 @@ export function Skills() {
             ? '每一项都能对上公开仓库，或对上原来的个人资料。没有单独做熟练度打分。'
             : 'Each item maps to a public repository or to the existing profile. There is no invented proficiency score.'}
         </p>
+
+        <Constellation />
 
         <div className="mt-8 grid gap-8 lg:grid-cols-3">
           {skillGroups.map((group) => (

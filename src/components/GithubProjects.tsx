@@ -63,7 +63,7 @@ function ProjectCard({ repo, lang, featured }: { repo: DisplayRepo; lang: Lang; 
 
   return (
     <motion.article
-      className="flex h-full flex-col rounded-3xl border border-white/10 bg-[#0c0e14] p-5 transition-colors hover:border-[#e4e0cc]/30 hover:bg-white/[0.03] sm:p-6"
+      className="glow-card flex h-full flex-col rounded-3xl border border-white/10 bg-[#0c0e14] p-5 sm:p-6"
       initial={reduce ? false : { opacity: 0, y: 16 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, margin: '0px 0px -40px' }}

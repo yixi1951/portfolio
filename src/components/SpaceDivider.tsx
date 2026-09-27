@@ -1,9 +1,21 @@
-import { motion, useReducedMotion } from 'framer-motion'
+import { SolarSystem } from './SolarSystem'
 import { FloatingAstronaut } from './FloatingAstronaut'
 import { useI18n } from '../i18n-context'
 
+const galaxyPath = (() => {
+  const commands: string[] = []
+  for (let index = 0; index < 90; index += 1) {
+    const progress = index / 90
+    const angle = progress * Math.PI * 5.2
+    const radius = 6 + progress * 78
+    const x = 210 + Math.cos(angle) * radius
+    const y = 90 + Math.sin(angle) * radius * 0.42
+    commands.push(`${index === 0 ? 'M' : 'L'} ${x.toFixed(1)} ${y.toFixed(1)}`)
+  }
+  return commands.join(' ')
+})()
+
 export function SpaceDivider({ variant = 'orbit' }: { variant?: 'orbit' | 'astronaut' | 'stars' }) {
-  const reduce = useReducedMotion()
   const { lang } = useI18n()
   const label =
     variant === 'astronaut'
@@ -12,57 +24,46 @@ export function SpaceDivider({ variant = 'orbit' }: { variant?: 'orbit' | 'astro
         : 'Outside'
       : variant === 'stars'
         ? lang === 'zh'
-          ? '星野'
-          : 'Starfield'
+          ? '星系'
+          : 'Galaxy'
         : lang === 'zh'
-          ? '轨道'
-          : 'Orbit'
+          ? '黑洞'
+          : 'Black hole'
 
   return (
     <div className="px-4 py-3 md:px-6" aria-hidden>
       <div
         className={`relative mx-auto max-w-6xl overflow-hidden rounded-3xl border border-white/10 bg-[#10131a] ${
-          variant === 'astronaut' ? 'h-48 sm:h-56' : 'h-36 sm:h-44'
+          variant === 'astronaut' ? 'h-56 sm:h-64' : 'h-40 sm:h-48'
         }`}
       >
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_50%_120%,rgba(228,224,204,0.12),transparent_55%)]" />
-        <p className="absolute left-5 top-4 text-[11px] font-medium uppercase tracking-[0.22em] text-zinc-500">{label}</p>
+        <p className="absolute left-5 top-4 z-10 text-[11px] font-medium uppercase tracking-[0.22em] text-zinc-500">
+          {label}
+        </p>
 
-        {variant === 'stars' &&
-          [18, 32, 47, 61, 74, 28, 55, 82].map((left, index) => (
-            <motion.span
-              key={left}
-              className="absolute rounded-full bg-white"
-              style={{
-                left: `${left}%`,
-                top: `${22 + ((index * 13) % 55)}%`,
-                width: index % 3 === 0 ? 3 : 2,
-                height: index % 3 === 0 ? 3 : 2,
-              }}
-              initial={{ opacity: 0.45 }}
-              animate={reduce ? undefined : { opacity: [0.25, 0.95, 0.35] }}
-              transition={{ duration: 2.4 + index * 0.25, repeat: Infinity, ease: 'easeInOut' }}
-            />
-          ))}
+        {variant === 'stars' && (
+          <svg viewBox="0 0 420 180" className="absolute inset-0 h-full w-full">
+            <path d={galaxyPath} className="galaxy-arm" />
+            <circle cx="210" cy="90" r="3" fill="#f4f1e4" />
+            {[40, 90, 150, 280, 330, 370].map((x, index) => (
+              <circle key={x} cx={x} cy={30 + ((index * 37) % 120)} r={index % 2 ? 1.2 : 1.8} fill="#f7f4ea" className="twinkle" />
+            ))}
+          </svg>
+        )}
 
         {variant === 'orbit' && (
-          <div className="absolute left-1/2 top-1/2 h-28 w-28 -translate-x-1/2 -translate-y-1/2 sm:h-32 sm:w-32">
-            <div className="absolute inset-0 rounded-full border border-white/15" />
-            <div className="absolute inset-3 rounded-full border border-dashed border-white/15" />
-            <motion.div
-              className="absolute inset-0"
-              animate={reduce ? undefined : { rotate: 360 }}
-              transition={{ duration: 18, repeat: Infinity, ease: 'linear' }}
-            >
-              <span className="absolute left-1/2 top-0 h-2.5 w-2.5 -translate-x-1/2 rounded-full bg-[#e4e0cc] shadow-[0_0_16px_rgba(228,224,204,0.8)]" />
-            </motion.div>
-            <span className="absolute left-1/2 top-1/2 h-2 w-2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-white" />
+          <div className="absolute left-1/2 top-1/2 h-36 w-36 -translate-x-1/2 -translate-y-1/2 sm:h-40 sm:w-40">
+            <div className="bh-ring" />
+            <div className="bh-core" />
           </div>
         )}
 
         {variant === 'astronaut' && (
-          <div className="absolute inset-y-0 right-6 flex items-center sm:right-16">
-            <FloatingAstronaut size="sm" />
+          <div className="absolute inset-0 flex items-center justify-end pr-2 sm:pr-16">
+            <SolarSystem>
+              <FloatingAstronaut size="sm" className="scale-[0.78]" />
+            </SolarSystem>
           </div>
         )}
       </div>

@@ -5,6 +5,8 @@ import { Hero } from './components/Hero'
 import { SiteHeader } from './components/SiteHeader'
 import { Skills } from './components/Skills'
 import { SpaceDivider } from './components/SpaceDivider'
+import { Flyby } from './components/Flyby'
+import { StarCursor } from './components/StarCursor'
 import { Starfield } from './components/Starfield'
 import { useI18n } from './i18n-context'
 
@@ -14,6 +16,8 @@ function App() {
   return (
     <>
       <Starfield />
+      <StarCursor />
+      <Flyby />
       <a
         href="#top"
         className="skip-link"

@@ -36,7 +36,9 @@ export function Contact() {
   return (
     <section id="contact" className="scroll-mt-24 px-4 py-4 pb-10 md:px-6 md:pb-16">
       <div className="mx-auto grid max-w-6xl gap-4 lg:grid-cols-[0.9fr_1.1fr]">
-        <div className="rounded-3xl border border-white/10 bg-[#10131a] p-6 sm:p-8">
+        <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-[#10131a] p-6 sm:p-8">
+          <div className="moon pointer-events-none absolute -bottom-10 -right-6 h-40 w-40 rounded-full" aria-hidden />
+          <div className="relative">
           <p className="text-xs font-medium uppercase tracking-[0.22em] text-zinc-400">
             {lang === 'zh' ? '联系' : 'Contact'}
           </p>
@@ -55,13 +57,14 @@ export function Contact() {
             {lang === 'zh' ? '发邮件' : 'Send an email'}
             <Mail className="h-4 w-4" aria-hidden />
           </a>
+          </div>
         </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
           {items.map((item) => {
             const Icon = item.icon
             const body = (
-              <div className="h-full rounded-3xl border border-white/10 bg-[#10131a] p-5 transition-colors hover:border-[#e4e0cc]/25 hover:bg-white/[0.03]">
+              <div className="glow-card h-full rounded-3xl border border-white/10 bg-[#10131a] p-5 transition-colors hover:bg-white/[0.03]">
                 <Icon className="h-5 w-5 text-[#e4e0cc]" aria-hidden />
                 <p className="mt-6 text-xs font-medium uppercase tracking-[0.18em] text-zinc-400">{item.label}</p>
                 <p className="mt-2 break-all text-sm text-[#f3f0e2]">{item.value}</p>

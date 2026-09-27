@@ -1,10 +1,14 @@
+import { motion, useReducedMotion } from 'framer-motion'
 import { ArrowUpRight, FolderGit2, Mail } from 'lucide-react'
-import { FloatingAstronaut } from './FloatingAstronaut'
+import { SolarSystem } from './SolarSystem'
+import { TypeLine } from './TypeLine'
 import { profile } from '../data/profile'
 import { useI18n } from '../i18n-context'
 
 export function Hero() {
   const { lang } = useI18n()
+  const reduce = useReducedMotion()
+  const name = lang === 'zh' ? profile.name : profile.nameEn
 
   return (
     <section id="top" className="px-4 pb-2 pt-6 md:px-6 md:pt-10">
@@ -18,18 +22,33 @@ export function Hero() {
               {profile.school[lang]} · {profile.role[lang]}
             </p>
             <h1 className="mt-5 text-5xl font-medium leading-[0.95] tracking-tight text-[#f6f3e6] sm:text-6xl md:text-7xl">
-              {lang === 'zh' ? profile.name : profile.nameEn}
+              {reduce ? (
+                name
+              ) : (
+                Array.from(name).map((character, index) => (
+                  <motion.span
+                    key={`${character}-${index}`}
+                    className="inline-block"
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.35, delay: index * 0.04 }}
+                  >
+                    {character === ' ' ? '\u00A0' : character}
+                  </motion.span>
+                ))
+              )}
             </h1>
             <p className="mt-3 font-serif text-2xl italic text-[#e4e0cc]/80 sm:text-3xl">
               {lang === 'zh' ? profile.nameEn : profile.name}
             </p>
-            <p className="mt-6 max-w-lg text-base leading-relaxed text-zinc-300 sm:text-lg">
-              {profile.heroTagline[lang]}
-            </p>
+            <TypeLine
+              text={profile.heroTagline[lang]}
+              className="mt-6 max-w-lg text-base leading-relaxed text-zinc-300 sm:text-lg"
+            />
             <div className="mt-8 flex flex-wrap gap-3">
               <a
                 href="#projects"
-                className="inline-flex min-h-11 items-center gap-2 rounded-full bg-[#e4e0cc] px-5 py-2.5 text-sm font-medium text-[#14140f] transition-colors hover:bg-[#f4f1e4]"
+                className="glow-card inline-flex min-h-11 items-center gap-2 rounded-full bg-[#e4e0cc] px-5 py-2.5 text-sm font-medium text-[#14140f] transition-colors hover:bg-[#f4f1e4]"
               >
                 {lang === 'zh' ? '看项目' : 'View projects'}
                 <FolderGit2 className="h-4 w-4" aria-hidden />
@@ -90,12 +109,11 @@ export function Hero() {
           <p className="mt-4 text-sm text-zinc-400">{profile.location[lang]}</p>
         </div>
 
-        <div
-          className="relative hidden min-h-44 items-center justify-center overflow-hidden rounded-3xl border border-white/10 bg-[#10131a] lg:col-span-2 lg:flex"
-          aria-hidden
-        >
+        <div className="relative hidden min-h-48 items-center justify-center overflow-hidden rounded-3xl border border-white/10 bg-[#10131a] lg:col-span-2 lg:flex">
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_60%,rgba(228,224,204,0.14),transparent_62%)]" />
-          <FloatingAstronaut size="sm" />
+          <SolarSystem>
+            <span className="h-3 w-3 rounded-full bg-[#f7f4ea] shadow-[0_0_18px_rgba(247,244,234,0.85)]" />
+          </SolarSystem>
         </div>
       </div>
     </section>
