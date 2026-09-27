@@ -3,6 +3,7 @@
 @tailwind utilities;
 
 * {
+  box-sizing: border-box;
   font-family: 'Almarai', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto',
     'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
 }
@@ -12,6 +13,15 @@ body {
   color: #e1e0cc;
   margin: 0;
   overflow-x: hidden;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
 }
 
 .noise-overlay {

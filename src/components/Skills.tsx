@@ -1,140 +1,67 @@
-import { useRef } from 'react'
-import { motion, useInView } from 'framer-motion'
-import { Award, Check, Users } from 'lucide-react'
-import { WordsPullUpMultiStyle } from './WordsPullUpMultiStyle'
+import { motion } from 'framer-motion'
+import { BookOpen, PenLine, Star } from 'lucide-react'
 import { profile } from '../data/profile'
+import { useI18n } from '../i18n'
 
-const FEATURE_VIDEO =
-  'https://d8j0ntlcm91z4.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/hf_20260406_133058_0504132a-0cf3-4450-a370-8ea3b05c95d4.mp4'
-
-interface SkillCardProps {
-  index: number
-  children: React.ReactNode
-  className?: string
-}
-
-function SkillCard({ index, children, className = '' }: SkillCardProps) {
-  const ref = useRef<HTMLDivElement>(null)
-  const isInView = useInView(ref, { once: true, margin: '-100px' })
-
-  return (
-    <motion.div
-      ref={ref}
-      className={`relative overflow-hidden rounded-2xl ${className}`}
-      initial={{ opacity: 0, scale: 0.95 }}
-      animate={isInView ? { opacity: 1, scale: 1 } : { opacity: 0, scale: 0.95 }}
-      transition={{
-        duration: 0.6,
-        delay: index * 0.15,
-        ease: [0.22, 1, 0.36, 1],
-      }}
-    >
-      {children}
-    </motion.div>
-  )
-}
-
-interface InfoCardProps {
-  index: number
-  number: string
-  title: string
-  icon: React.ReactNode
-  items: string[]
-}
-
-function InfoCard({ index, number, title, icon, items }: InfoCardProps) {
-  return (
-    <SkillCard
-      index={index}
-      className="flex h-full min-h-[320px] flex-col bg-[#212121] p-5 sm:min-h-[360px] sm:p-6"
-    >
-      <div className="mb-6 flex h-10 w-10 items-center justify-center rounded-xl bg-[#2a2a2a] sm:h-12 sm:w-12">
-        {icon}
-      </div>
-
-      <div className="mb-6">
-        <span className="text-xs text-gray-500">{number}</span>
-        <h3 className="mt-1 text-lg text-primary sm:text-xl">{title}</h3>
-      </div>
-
-      <ul className="mb-auto space-y-3">
-        {items.map((item) => (
-          <li key={item} className="flex items-start gap-2">
-            <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
-            <span className="text-sm text-gray-400">{item}</span>
-          </li>
-        ))}
-      </ul>
-    </SkillCard>
-  )
-}
+const stats = [
+  { label: { zh: '文章分类', en: 'Categories' }, value: profile.categories.length, icon: BookOpen },
+  { label: { zh: '已更新文章', en: 'Published posts' }, value: profile.latestPosts.length, icon: PenLine },
+  { label: { zh: '博客风格', en: 'Tone' }, value: { zh: '轻松', en: 'Relaxed' }, icon: Star },
+]
 
 export function Skills() {
+  const { lang } = useI18n()
   return (
-    <section id="skills" className="relative min-h-screen bg-black px-4 py-20 sm:px-6 md:py-28">
-      <div className="bg-noise pointer-events-none absolute inset-0 opacity-[0.15]" />
-
-      <div className="relative z-10 mx-auto max-w-7xl">
-        <div className="mb-12 text-center md:mb-16">
-          <WordsPullUpMultiStyle
-            className="mb-3 text-xl font-normal sm:text-2xl md:text-3xl lg:text-4xl"
-            segments={[{ text: '技能、荣誉与学生工作。', className: 'text-primary' }]}
-          />
-          <WordsPullUpMultiStyle
-            className="text-xl font-normal sm:text-2xl md:text-3xl lg:text-4xl"
-            segments={[{ text: '数学基础 + 工程落地能力。', className: 'text-gray-500' }]}
-          />
+    <section id="skills" className="px-4 py-4 md:px-6">
+      <div className="grid gap-4 lg:grid-cols-[1.15fr_0.85fr]">
+        <div className="grid gap-4 sm:grid-cols-3">
+          {stats.map((item, index) => {
+            const Icon = item.icon
+            return (
+              <motion.div
+                key={lang === 'zh' ? item.label.zh : item.label.en}
+                drag
+                dragElastic={0.08}
+                dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
+                whileDrag={{ scale: 1.01 }}
+                className="rounded-[1.75rem] border border-white/5 bg-[#101010] p-5 sm:p-6"
+                initial={{ opacity: 0, y: 16 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.45, delay: index * 0.08 }}
+              >
+                <Icon className="h-4 w-4 text-primary/80 sm:h-5 sm:w-5" />
+                <p className="mt-6 text-2xl text-[#E1E0CC] sm:text-3xl">
+                  {typeof item.value === 'number'
+                    ? item.value
+                    : typeof item.value === 'string'
+                      ? item.value
+                      : item.value[lang]}
+                </p>
+                <p className="mt-2 text-xs text-gray-500 sm:text-sm">
+                  {item.label[lang]}
+                </p>
+              </motion.div>
+            )
+          })}
         </div>
 
-        <div className="grid grid-cols-1 gap-3 sm:gap-2 md:grid-cols-2 md:gap-1 lg:grid-cols-4 lg:h-[480px]">
-          <SkillCard index={0} className="min-h-[320px] lg:min-h-0">
-            <video
-              autoPlay
-              loop
-              muted
-              playsInline
-              className="absolute inset-0 h-full w-full object-cover"
-            >
-              <source src={FEATURE_VIDEO} type="video/mp4" />
-            </video>
-            <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent" />
-            <div className="absolute bottom-5 left-5 sm:bottom-6 sm:left-6">
-              <p className="text-lg font-medium sm:text-xl" style={{ color: '#E1E0CC' }}>
-                AI · 数据 · 视觉
-              </p>
-              <p className="mt-1 text-xs text-gray-400 sm:text-sm">
-                {profile.languages.map((l) => `${l.name} ${l.level}`).join(' · ')}
-              </p>
-            </div>
-          </SkillCard>
-
-          <InfoCard
-            index={1}
-            number="01"
-            title="技术技能"
-            icon={<Check className="h-5 w-5 text-primary" />}
-            items={profile.skills.map((s) => `${s.name} — ${s.level}`)}
-          />
-
-          <InfoCard
-            index={2}
-            number="02"
-            title="荣誉奖项"
-            icon={<Award className="h-5 w-5 text-primary" />}
-            items={profile.honors}
-          />
-
-          <InfoCard
-            index={3}
-            number="03"
-            title={profile.leadership.role}
-            icon={<Users className="h-5 w-5 text-primary" />}
-            items={[
-              ...profile.leadership.highlights,
-              `任期 ${profile.leadership.period}`,
-              `爱好：${profile.hobbies[0]}`,
-            ]}
-          />
+        <div className="rounded-[1.75rem] border border-white/5 bg-primary p-5 text-black sm:p-7">
+          <p className="text-[9px] uppercase tracking-[0.3em] text-black/45 sm:text-[10px]">
+            {lang === 'zh' ? '本周在想' : 'This week'}
+          </p>
+          <h3 className="mt-4 text-xl font-medium leading-tight sm:text-2xl">
+            {lang === 'zh'
+              ? '以后这里会放更多长文、短记和一些不太严肃但很真实的想法。'
+              : 'This space will keep getting more long-form posts, short notes, and honest thoughts.'}
+          </h3>
+          <ul className="mt-6 space-y-3 text-xs sm:text-sm">
+            {profile.notes.map((note) => (
+              <li key={note} className="leading-relaxed">
+                {note}
+              </li>
+            ))}
+          </ul>
         </div>
       </div>
     </section>
