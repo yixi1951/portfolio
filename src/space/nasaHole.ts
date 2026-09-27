@@ -123,9 +123,11 @@ export function mountNasaHole(host: HTMLElement, options: { onError: () => void 
   const video = document.createElement('video')
   video.src = VIDEO_URL
   video.muted = true
+  video.defaultMuted = true
   video.loop = true
   video.playsInline = true
   video.preload = 'auto'
+  video.setAttribute('muted', '')
   video.setAttribute('playsinline', '')
   video.style.cssText = 'position:absolute;width:0;height:0;opacity:0;pointer-events:none'
   host.appendChild(video)
@@ -171,7 +173,10 @@ export function mountNasaHole(host: HTMLElement, options: { onError: () => void 
     pointerY += (targetY - pointerY) * 0.08
     tiltX += (targetTiltX - tiltX) * 0.08
     tiltY += (targetTiltY - tiltY) * 0.08
-    canvas.style.transform = `perspective(1100px) rotateX(${tiltX.toFixed(2)}deg) rotateY(${tiltY.toFixed(2)}deg)`
+    const idle = Math.abs(tiltX) < 0.04 && Math.abs(tiltY) < 0.04
+    canvas.style.transform = idle
+      ? ''
+      : `perspective(1100px) rotateX(${tiltX.toFixed(2)}deg) rotateY(${tiltY.toFixed(2)}deg)`
     if (usingVideo && video.readyState >= 2) upload(video)
     gl.useProgram(program)
     gl.uniform2f(uResolution, canvas.width, canvas.height)
