@@ -12,12 +12,45 @@ export type ProjectMeta = {
   /** Smaller number appears first among the same featured group. */
   order: number
   featured: boolean
+  /** In-site page. When set, the card opens this path instead of GitHub. */
+  sitePath?: string
 }
 
 /** This portfolio repo, unnamed experiments, and anything not meant for a public feature slot. */
 export const hiddenGithubRepos = new Set(['-', 'portfolio'])
 
 export const githubProjectMeta: Record<string, ProjectMeta> = {
+  math1: {
+    title: {
+      zh: '考研数学一 · 学习站',
+      en: 'Kaoyan Math I study site',
+    },
+    summary: {
+      zh: '单页学习站，把考研数学一拆成可检索的短模块。页面自己写的统计是 154 课：高数 69、线代 24、概率 21、技巧 33、易错 7。公式用 MathJax，交互图用 Plotly，另有 SVG 图示。',
+      en: 'A single-page study site that splits Kaoyan Math I into searchable short lessons. The page’s own counts are 154 lessons: 69 calculus, 24 linear algebra, 21 probability, 33 techniques, and 7 common traps. Formulas use MathJax, interactive charts use Plotly, and there are SVG diagrams too.',
+    },
+    highlights: [
+      {
+        zh: '可按高数、线代、概率、技巧、易错筛选，并搜索模块',
+        en: 'Filter by calculus, linear algebra, probability, techniques, or traps, and search the modules',
+      },
+      {
+        zh: '每课含直觉说明、公式、短例和易错；支持深色主题',
+        en: 'Each lesson has an intuition note, formulas, a short example, and traps, with a dark theme',
+      },
+      {
+        zh: '页内说明内容是大纲向的原创归纳，不收录商业千题解原文',
+        en: 'The page says the notes are original outline-style summaries, not text from commercial solution books',
+      },
+    ],
+    tags: ['HTML', 'MathJax', 'Plotly'],
+    language: 'HTML',
+    also: [],
+    period: '',
+    order: 4,
+    featured: true,
+    sitePath: '/math1/',
+  },
   OpinionTradingWorkflow: {
     title: {
       zh: '舆情交易工作流',

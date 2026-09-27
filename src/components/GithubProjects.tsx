@@ -10,11 +10,12 @@ const copy = {
   zh: {
     label: '项目',
     title: '公开仓库',
-    desc: '精选是近期比较完整的原创仓库，其余原创仓库列在后面。Fork，以及名为 portfolio 的本站仓库，没有放进来。',
+    desc: '精选是近期比较完整的原创仓库，以及站内的考研数学学习页。其余原创仓库列在后面。Fork，以及名为 portfolio 的本站仓库，没有放进来。',
     featured: '精选',
     more: '其他原创仓库',
     pushed: '推送于',
     viewRepo: 'GitHub',
+    openSite: '打开学习站',
     homepage: '主页',
     allOnGithub: '在 GitHub 查看全部',
     live: '星标和推送时间来自 GitHub',
@@ -24,11 +25,12 @@ const copy = {
   en: {
     label: 'Projects',
     title: 'Public repositories',
-    desc: 'Featured cards are the more complete original repos. Other original work follows. Forks, and the portfolio repo for this site, are left out.',
+    desc: 'Featured cards are the more complete original repos, plus the Kaoyan math study page on this site. Other original work follows. Forks, and the portfolio repo for this site, are left out.',
     featured: 'Featured',
     more: 'Other original repos',
     pushed: 'Pushed',
     viewRepo: 'GitHub',
+    openSite: 'Open study site',
     homepage: 'Homepage',
     allOnGithub: 'See everything on GitHub',
     live: 'Stars and push times come from GitHub',
@@ -60,6 +62,7 @@ function ProjectCard({ repo, lang, featured }: { repo: DisplayRepo; lang: Lang; 
   const c = copy[lang]
   const reduce = useReducedMotion()
   const pushed = formatDate(repo.pushed_at, lang)
+  const internal = repo.html_url.startsWith('/')
 
   return (
     <motion.article
@@ -84,7 +87,7 @@ function ProjectCard({ repo, lang, featured }: { repo: DisplayRepo; lang: Lang; 
       <h3 className={`mt-4 font-medium tracking-tight text-[#f6f3e6] ${featured ? 'text-2xl' : 'text-xl'}`}>
         {repo.title[lang]}
       </h3>
-      {repo.title[lang] !== repo.name && (
+      {!internal && repo.title[lang] !== repo.name && (
         <p className="mt-1 font-mono text-xs text-zinc-400">{repo.name}</p>
       )}
       <p className="mt-3 text-sm leading-relaxed text-zinc-300">{repo.summary[lang] || c.noDescription}</p>
@@ -113,11 +116,11 @@ function ProjectCard({ repo, lang, featured }: { repo: DisplayRepo; lang: Lang; 
       <div className="mt-auto flex flex-wrap items-center gap-x-4 gap-y-2 pt-5 text-sm">
         <a
           href={repo.html_url}
-          target="_blank"
-          rel="noopener noreferrer"
+          target={internal ? undefined : '_blank'}
+          rel={internal ? undefined : 'noopener noreferrer'}
           className="inline-flex min-h-11 items-center gap-1 rounded-full text-[#e4e0cc] underline-offset-4 hover:underline"
         >
-          {c.viewRepo}
+          {internal ? c.openSite : c.viewRepo}
           <ArrowUpRight className="h-4 w-4" aria-hidden />
         </a>
         {repo.homepage && (

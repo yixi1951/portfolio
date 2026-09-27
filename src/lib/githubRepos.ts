@@ -95,7 +95,7 @@ function fromMeta(name: string, meta: ProjectMeta, live?: GithubRepo): DisplayRe
   const liveTopics = (live?.topics ?? []).filter((topic) => !meta.tags.includes(topic))
   return {
     name,
-    html_url: live?.html_url ?? repoUrl(name),
+    html_url: meta.sitePath ?? live?.html_url ?? repoUrl(name),
     language: live?.language ?? meta.language,
     also: meta.also.filter((lang) => lang !== (live?.language ?? meta.language)),
     stargazers_count: live?.stargazers_count ?? 0,
