@@ -15,7 +15,7 @@ export function About() {
             {lang === 'zh' ? '关于' : 'About'}
           </p>
           <h2 className="mt-3 text-3xl font-medium tracking-tight text-[#f6f3e6] sm:text-4xl">
-            {lang === 'zh' ? '学生，也在把项目做完。' : 'A student who ships the whole project.'}
+            {lang === 'zh' ? '本科在读，独立完成完整项目。' : 'Undergraduate. Projects delivered in full.'}
           </h2>
           <p className="mt-5 text-base leading-relaxed text-zinc-300">{profile.bio[lang]}</p>
           <p className="mt-4 text-sm leading-relaxed text-zinc-400">{profile.intent[lang]}</p>
@@ -82,7 +82,7 @@ export function About() {
         <Reveal className="lg:col-span-3" delay={0.24}>
         <div className="tilt-card glow-card h-full rounded-3xl border border-white/10 bg-[#10131a] p-6 sm:p-7">
           <p className="text-xs font-medium uppercase tracking-[0.22em] text-zinc-400">
-            {lang === 'zh' ? '此外' : 'Also'}
+            {lang === 'zh' ? '其他' : 'Additional'}
           </p>
           <p className="mt-4 text-sm leading-relaxed text-zinc-300">{profile.hobby[lang]}</p>
           <p className="mt-4 text-sm leading-relaxed text-zinc-400">

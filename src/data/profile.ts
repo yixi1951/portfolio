@@ -48,16 +48,16 @@ export const profile = {
     { name: { zh: '英语', en: 'English' }, level: { zh: '四级 524 分', en: 'CET-4, 524' } },
   ],
   hobby: {
-    zh: '篮球，参加过校篮球赛',
-    en: 'Basketball, including a campus tournament',
+    zh: '篮球。曾参加校级篮球赛。',
+    en: 'Basketball. Competed in a campus tournament.',
   } satisfies Localized,
   intent: {
-    zh: '求职方向是计算机软件与 AI。资料中的实习意向为每周 5 天、持续 3 个月，最早可到岗时间为 2026 年 7 月 1 日。',
-    en: 'Aiming at software and AI roles. The profile lists an internship of 5 days a week for 3 months, available from 1 July 2026.',
+    zh: '求职方向为计算机软件与人工智能。实习意向为每周 5 天、为期 3 个月，最早到岗日期为 2026 年 7 月 1 日。',
+    en: 'Seeking roles in software and artificial intelligence. Internship terms: five days per week for three months; earliest start 1 July 2026.',
   } satisfies Localized,
   bio: {
-    zh: '深圳大学信息与计算科学（数学与计算机实验班）本科在读，2023 年 9 月入学，预计 2027 年 6 月毕业。GPA 3.27/4.5，专业前 50%。公开仓库里，近期工作主要是多源舆情与多 Agent 选股、农作物病虫害识别，以及离线表格核验。',
-    en: 'Undergraduate in Information and Computing Science at Shenzhen University, enrolled September 2023 and expected to graduate June 2027. GPA 3.27/4.5, top 50% of the major. Recent public work covers multi-source opinion research with multi-agent scoring, crop-disease recognition, and offline spreadsheet reconciliation.',
+    zh: '深圳大学信息与计算科学（数学与计算机实验班）本科在读。2023 年 9 月入学，预计 2027 年 6 月毕业。GPA 3.27/4.5，专业前 50%。近期公开项目为多源舆情与多智能体选股、农作物病虫害识别，以及离线表格核验。',
+    en: 'Undergraduate in Information and Computing Science (Mathematics and Computer Science experimental class), Shenzhen University. Enrolled September 2023; expected graduation June 2027. GPA 3.27/4.5, top 50% of the major. Recent public projects: multi-source opinion analysis with multi-agent stock selection, crop pest and disease recognition, and offline spreadsheet reconciliation.',
   } satisfies Localized,
   heroTagline: {
     zh: '把数据采集、模型和能打开看的界面做成完整项目。最近在做舆情选股、农作物病害识别和表格核验。',
