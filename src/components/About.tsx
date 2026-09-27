@@ -1,69 +1,97 @@
-import { WordsPullUpMultiStyle } from './WordsPullUpMultiStyle'
-import { AnimatedParagraph } from './AnimatedLetter'
 import { profile } from '../data/profile'
+import { useI18n } from '../i18n-context'
+import { OrbitTrail } from './OrbitTrail'
+import { Reveal } from './Reveal'
 
 export function About() {
+  const { lang } = useI18n()
+
   return (
-    <section id="about" className="bg-black px-4 py-20 sm:px-6 md:py-28 lg:py-32">
-      <div className="mx-auto max-w-6xl rounded-none bg-[#101010] px-6 py-16 text-center sm:px-10 sm:py-20 md:px-16 md:py-24">
-        <p className="mb-8 text-[10px] text-primary sm:mb-10 sm:text-xs">关于我</p>
-
-        <WordsPullUpMultiStyle
-          className="mx-auto mb-10 max-w-3xl text-3xl leading-[0.95] sm:mb-12 sm:text-4xl sm:leading-[0.9] md:text-5xl lg:text-6xl xl:text-7xl"
-          segments={[
-            { text: '我是杨子烽，', className: 'font-normal' },
-            {
-              text: '深圳大学信息与计算科学学生。',
-              className: 'font-serif italic',
-            },
-            {
-              text: '专注机器学习、数据工程与可解释 AI 应用。',
-              className: 'font-normal',
-            },
-          ]}
-        />
-
-        <AnimatedParagraph
-          text={profile.bio}
-          className="mx-auto max-w-2xl text-xs text-[#DEDBC8] sm:text-sm md:text-base"
-        />
-
-        <div className="mx-auto mt-12 grid max-w-3xl grid-cols-1 gap-4 text-left sm:grid-cols-2 sm:gap-3">
-          <div className="rounded-2xl border border-white/5 bg-black/40 p-5">
-            <p className="text-[10px] text-gray-500 sm:text-xs">教育背景</p>
-            <p className="mt-2 text-sm text-primary sm:text-base">{profile.education.school}</p>
-            <p className="mt-1 text-xs text-gray-400 sm:text-sm">{profile.education.major}</p>
-            <p className="mt-2 text-xs text-gray-500">{profile.education.period}</p>
-            <p className="mt-1 text-xs text-gray-500">
-              GPA {profile.education.gpa} · {profile.education.gpaRank}
-            </p>
-          </div>
-
-          <div className="rounded-2xl border border-white/5 bg-black/40 p-5">
-            <p className="text-[10px] text-gray-500 sm:text-xs">荣誉奖项</p>
-            <ul className="mt-2 space-y-2">
-              {profile.honors.map((honor) => (
-                <li key={honor} className="text-xs text-gray-400 sm:text-sm">
-                  · {honor}
-                </li>
-              ))}
-            </ul>
-          </div>
+    <section id="about" className="scroll-mt-24 px-4 py-4 md:px-6">
+      <div className="mx-auto grid max-w-6xl gap-4 lg:grid-cols-12">
+        <Reveal className="lg:col-span-7">
+        <div className="tilt-card glow-card h-full rounded-3xl border border-white/10 bg-[#10131a] p-6 sm:p-8">
+          <p className="text-xs font-medium uppercase tracking-[0.22em] text-zinc-400">
+            {lang === 'zh' ? '关于' : 'About'}
+          </p>
+          <h2 className="mt-3 text-3xl font-medium tracking-tight text-[#f6f3e6] sm:text-4xl">
+            {lang === 'zh' ? '学生，也在把项目做完。' : 'A student who ships the whole project.'}
+          </h2>
+          <p className="mt-5 text-base leading-relaxed text-zinc-300">{profile.bio[lang]}</p>
+          <p className="mt-4 text-sm leading-relaxed text-zinc-400">{profile.intent[lang]}</p>
         </div>
+        </Reveal>
 
-        <div className="mx-auto mt-4 max-w-3xl rounded-2xl border border-white/5 bg-black/40 p-5 text-left">
-          <p className="text-[10px] text-gray-500 sm:text-xs">主修课程</p>
-          <div className="mt-3 flex flex-wrap gap-2">
-            {profile.education.courses.map((course) => (
-              <span
-                key={course}
-                className="rounded-full border border-white/10 px-3 py-1 text-xs text-primary/80"
-              >
-                {course}
+        <Reveal className="lg:col-span-5" delay={0.12}>
+        <div className="tilt-card glow-card h-full rounded-3xl border border-white/10 bg-[#10131a] p-6 sm:p-8">
+          <p className="text-xs font-medium uppercase tracking-[0.22em] text-zinc-400">
+            {lang === 'zh' ? '课程' : 'Coursework'}
+          </p>
+          <ul className="mt-5 space-y-3">
+            {profile.courses.map((course) => (
+              <li key={course.en} className="flex items-center justify-between gap-4 border-b border-white/10 pb-3 text-sm last:border-b-0 last:pb-0">
+                <span className="text-[#f3f0e2]">{course[lang]}</span>
+                <span className="text-zinc-500" aria-hidden>
+                  —
+                </span>
+              </li>
+            ))}
+          </ul>
+          <div className="mt-6 flex flex-wrap gap-2">
+            {profile.languages.map((item) => (
+              <span key={item.name.en} className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-xs text-zinc-200">
+                {item.name[lang]} · {item.level[lang]}
               </span>
             ))}
           </div>
         </div>
+        </Reveal>
+
+        <Reveal className="lg:col-span-4" delay={0.08}>
+        <div className="tilt-card glow-card h-full rounded-3xl border border-white/10 bg-[#10131a] p-6 sm:p-7">
+          <p className="text-xs font-medium uppercase tracking-[0.22em] text-zinc-400">
+            {lang === 'zh' ? '荣誉' : 'Honors'}
+          </p>
+          <ul className="mt-4 space-y-3">
+            {profile.honors.map((honor) => (
+              <li key={honor.en} className="text-sm leading-relaxed text-zinc-200">
+                {honor[lang]}
+              </li>
+            ))}
+          </ul>
+        </div>
+        </Reveal>
+
+        <Reveal className="lg:col-span-5" delay={0.16}>
+        <div className="tilt-card glow-card h-full rounded-3xl border border-white/10 bg-[#10131a] p-6 sm:p-7">
+          <p className="text-xs font-medium uppercase tracking-[0.22em] text-zinc-400">
+            {lang === 'zh' ? '学生工作' : 'Student role'}
+          </p>
+          <h3 className="mt-3 text-xl font-medium text-[#f3f0e2]">{profile.leadership.role[lang]}</h3>
+          <p className="mt-1 text-sm text-zinc-400">{profile.leadership.period}</p>
+          <ul className="mt-4 space-y-2">
+            {profile.leadership.highlights.map((item) => (
+              <li key={item.en} className="text-sm leading-relaxed text-zinc-300">
+                {item[lang]}
+              </li>
+            ))}
+          </ul>
+        </div>
+        </Reveal>
+
+        <Reveal className="lg:col-span-3" delay={0.24}>
+        <div className="tilt-card glow-card h-full rounded-3xl border border-white/10 bg-[#10131a] p-6 sm:p-7">
+          <p className="text-xs font-medium uppercase tracking-[0.22em] text-zinc-400">
+            {lang === 'zh' ? '此外' : 'Also'}
+          </p>
+          <p className="mt-4 text-sm leading-relaxed text-zinc-300">{profile.hobby[lang]}</p>
+          <p className="mt-4 text-sm leading-relaxed text-zinc-400">
+            {profile.degree[lang]} · {profile.location[lang]}
+          </p>
+        </div>
+        </Reveal>
+
+        <OrbitTrail />
       </div>
     </section>
   )

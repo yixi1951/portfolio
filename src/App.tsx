@@ -1,18 +1,43 @@
-import { Hero } from './components/Hero'
 import { About } from './components/About'
-import { Projects } from './components/Projects'
-import { Skills } from './components/Skills'
 import { Contact } from './components/Contact'
+import { GithubProjects } from './components/GithubProjects'
+import { Hero } from './components/Hero'
+import { SiteHeader } from './components/SiteHeader'
+import { Skills } from './components/Skills'
+import { SpaceDivider } from './components/SpaceDivider'
+import { Flyby } from './components/Flyby'
+import { StarCursor } from './components/StarCursor'
+import { Starfield } from './components/Starfield'
+import { useI18n } from './i18n-context'
 
 function App() {
+  const { lang } = useI18n()
+
   return (
-    <main>
-      <Hero />
-      <About />
-      <Projects />
-      <Skills />
-      <Contact />
-    </main>
+    <>
+      <Starfield />
+      <StarCursor />
+      <Flyby />
+      <a
+        href="#top"
+        className="skip-link"
+      >
+        {lang === 'zh' ? '跳到内容' : 'Skip to content'}
+      </a>
+      <div className="relative z-10">
+        <SiteHeader />
+        <main>
+          <Hero />
+          <SpaceDivider variant="stars" />
+          <About />
+          <GithubProjects />
+          <SpaceDivider variant="orbit" />
+          <Skills />
+          <SpaceDivider variant="astronaut" />
+          <Contact />
+        </main>
+      </div>
+    </>
   )
 }
 

@@ -1,103 +1,106 @@
-import { motion } from 'framer-motion'
-import { ArrowRight, Code2, Mail, MapPin, Phone } from 'lucide-react'
-import { WordsPullUpMultiStyle } from './WordsPullUpMultiStyle'
+import { ArrowUpRight, Mail, MapPin, Phone } from 'lucide-react'
 import { profile } from '../data/profile'
-
-const contactItems = [
-  {
-    icon: Mail,
-    label: '邮箱',
-    value: profile.email,
-    href: `mailto:${profile.email}`,
-  },
-  {
-    icon: Phone,
-    label: '电话',
-    value: profile.phone,
-    href: `tel:${profile.phone.replace(/\s/g, '')}`,
-  },
-  {
-    icon: MapPin,
-    label: '所在地',
-    value: profile.location,
-    href: undefined,
-  },
-  {
-    icon: Code2,
-    label: 'GitHub',
-    value: `@${profile.github}`,
-    href: `https://github.com/${profile.github}`,
-  },
-]
+import { useI18n } from '../i18n-context'
+import { Reveal } from './Reveal'
 
 export function Contact() {
+  const { lang } = useI18n()
+  const subject = encodeURIComponent(lang === 'zh' ? '你好，来自个人网站' : 'Hello from your site')
+
+  const items = [
+    {
+      icon: Mail,
+      label: lang === 'zh' ? '邮箱' : 'Email',
+      value: profile.email,
+      href: `mailto:${profile.email}?subject=${subject}`,
+    },
+    {
+      icon: Phone,
+      label: lang === 'zh' ? '电话' : 'Phone',
+      value: profile.phone,
+      href: profile.phoneHref,
+    },
+    {
+      icon: ArrowUpRight,
+      label: 'GitHub',
+      value: profile.githubUsername,
+      href: profile.githubUrl,
+      external: true,
+    },
+    {
+      icon: MapPin,
+      label: lang === 'zh' ? '所在地' : 'Location',
+      value: profile.location[lang],
+    },
+  ]
+
   return (
-    <section id="contact" className="bg-black px-4 py-20 sm:px-6 md:py-28 lg:py-32">
-      <div className="mx-auto max-w-4xl text-center">
-        <p className="mb-4 text-[10px] text-primary sm:text-xs">Contact</p>
-        <WordsPullUpMultiStyle
-          className="mb-3 text-xl font-normal sm:text-2xl md:text-3xl lg:text-4xl"
-          segments={[{ text: '期待与你合作。', className: 'text-primary' }]}
-        />
-        <WordsPullUpMultiStyle
-          className="mb-12 text-xl font-normal sm:mb-16 sm:text-2xl md:text-3xl lg:text-4xl"
-          segments={[
-            {
-              text: `${profile.jobIntent} · 实习 ${profile.internship.daysPerWeek} 天/周 · ${profile.internship.availableFrom} 起`,
-              className: 'text-gray-500',
-            },
-          ]}
-        />
+    <section id="contact" className="scroll-mt-24 px-4 py-4 pb-10 md:px-6 md:pb-16">
+      <div className="mx-auto grid max-w-6xl gap-4 lg:grid-cols-[0.9fr_1.1fr]">
+        <Reveal>
+        <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-[#10131a] p-6 sm:p-8">
+          <div className="moon pointer-events-none absolute -bottom-10 -right-6 h-40 w-40 rounded-full" aria-hidden />
+          <div className="relative">
+          <p className="text-xs font-medium uppercase tracking-[0.22em] text-zinc-400">
+            {lang === 'zh' ? '联系' : 'Contact'}
+          </p>
+          <h2 className="mt-3 text-3xl font-medium tracking-tight text-[#f6f3e6] sm:text-4xl">
+            {lang === 'zh' ? '想聊聊项目，直接写信。' : 'If a project is interesting, write.'}
+          </h2>
+          <p className="mt-4 text-sm leading-relaxed text-zinc-400">
+            {lang === 'zh'
+              ? `${profile.nameEn} · ${profile.school[lang]}`
+              : `${profile.name} · ${profile.school[lang]}`}
+          </p>
+          <a
+            href={`mailto:${profile.email}?subject=${subject}`}
+            className="mt-8 inline-flex min-h-11 items-center gap-2 rounded-full bg-[#e4e0cc] px-5 py-2.5 text-sm font-medium text-[#14140f] transition-colors hover:bg-[#f4f1e4]"
+          >
+            {lang === 'zh' ? '发邮件' : 'Send an email'}
+            <Mail className="h-4 w-4" aria-hidden />
+          </a>
+          </div>
+        </div>
+        </Reveal>
 
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          {contactItems.map((item, index) => {
+        <div className="grid gap-4 sm:grid-cols-2">
+          {items.map((item, index) => {
             const Icon = item.icon
-            const content = (
-              <motion.div
-                className="flex items-center gap-4 rounded-2xl bg-[#101010] p-5 text-left transition-colors hover:bg-[#161616] sm:p-6"
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{
-                  duration: 0.5,
-                  delay: index * 0.1,
-                  ease: [0.16, 1, 0.3, 1],
-                }}
-              >
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#212121]">
-                  <Icon className="h-4 w-4 text-primary" />
-                </span>
-                <div>
-                  <p className="text-[10px] text-gray-500 sm:text-xs">{item.label}</p>
-                  <p className="mt-0.5 text-sm text-primary sm:text-base">{item.value}</p>
-                </div>
-              </motion.div>
+            const body = (
+              <div className="tilt-card glow-card h-full rounded-3xl border border-white/10 bg-[#10131a] p-5 transition-colors hover:bg-white/[0.03]">
+                <Icon className="h-5 w-5 text-[#e4e0cc]" aria-hidden />
+                <p className="mt-6 text-xs font-medium uppercase tracking-[0.18em] text-zinc-400">{item.label}</p>
+                <p className="mt-2 break-all text-sm text-[#f3f0e2]">{item.value}</p>
+              </div>
             )
-
-            return item.href ? (
-              <a key={item.label} href={item.href} target={item.href.startsWith('http') ? '_blank' : undefined} rel="noopener noreferrer">
-                {content}
-              </a>
-            ) : (
-              <div key={item.label}>{content}</div>
+            if (!item.href) {
+              return (
+                <Reveal key={item.label} delay={index * 0.08}>
+                  {body}
+                </Reveal>
+              )
+            }
+            return (
+              <Reveal key={item.label} delay={index * 0.08}>
+                <a
+                  href={item.href}
+                  target={item.external ? '_blank' : undefined}
+                  rel={item.external ? 'noopener noreferrer' : undefined}
+                  className="block min-h-11"
+                >
+                  {body}
+                </a>
+              </Reveal>
             )
           })}
         </div>
-
-        <motion.a
-          href={`mailto:${profile.email}?subject=实习咨询 - 杨子烽`}
-          className="group mt-10 inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 font-medium text-black transition-all hover:gap-3"
-          initial={{ opacity: 0, y: 16 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          transition={{ duration: 0.5, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
-        >
-          发送邮件
-          <span className="flex h-9 w-9 items-center justify-center rounded-full bg-black transition-transform group-hover:scale-110">
-            <ArrowRight className="h-4 w-4 text-primary" />
-          </span>
-        </motion.a>
       </div>
+      <footer className="mx-auto mt-8 flex max-w-6xl flex-wrap items-center justify-between gap-2 px-1 text-xs text-zinc-500">
+        <p>
+          {profile.name} · {profile.nameEn}
+        </p>
+        <p>yixi1951</p>
+      </footer>
     </section>
   )
 }
