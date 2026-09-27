@@ -1,6 +1,6 @@
 const STILL_URL = '/media/black-hole-still.webp'
 const VIDEO_URL = '/media/black-hole.webm'
-const IMAGE_ASPECT = 16 / 9
+const IMAGE_ASPECT = 1040 / 320
 
 const VERT = `#version 300 es
 void main() {
@@ -52,9 +52,9 @@ void main() {
   vec3 plate = texture(uImage, iuv).rgb;
   float luma = dot(plate, vec3(0.2126, 0.7152, 0.0722));
   float disk = smoothstep(0.012, 0.07, luma);
-  vec2 hole = iuv - vec2(0.498, 0.556);
+  vec2 hole = iuv - vec2(0.505, 0.426);
   float radius = length(vec2(hole.x * ${IMAGE_ASPECT.toFixed(6)}, hole.y));
-  float shadow = (1.0 - smoothstep(0.145, 0.172, radius)) * (1.0 - smoothstep(0.02, 0.055, luma));
+  float shadow = (1.0 - smoothstep(0.30, 0.42, radius)) * (1.0 - smoothstep(0.015, 0.05, luma));
   float alpha = max(disk, shadow) * inside;
   vec3 color = mix(vec3(star), plate, alpha);
   color = mix(color, vec3(0.0), shadow * inside);

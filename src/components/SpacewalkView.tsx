@@ -147,11 +147,11 @@ export function SpacewalkView() {
         ref={astroRef}
         src="/media/mccandless.webp"
         alt={alt}
-        width={2184}
-        height={1200}
+        width={1400}
+        height={1598}
         loading="lazy"
         draggable={false}
-        className="pointer-events-none absolute left-1/2 top-[46%] h-auto w-auto max-h-[78%] max-w-[68%] select-none"
+        className="pointer-events-none absolute left-1/2 top-[48%] h-auto w-auto max-h-[90%] max-w-[42%] select-none"
         style={{ transform: 'translate(-50%, -50%)' }}
       />
       <p

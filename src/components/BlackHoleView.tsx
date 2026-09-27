@@ -17,8 +17,8 @@ function Still() {
     <img
       src="/media/black-hole-still.webp"
       alt=""
-      width={1600}
-      height={900}
+      width={1040}
+      height={320}
       className="absolute inset-0 h-full w-full object-cover"
       draggable={false}
     />
