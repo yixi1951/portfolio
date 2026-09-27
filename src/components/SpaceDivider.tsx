@@ -34,7 +34,7 @@ export function SpaceDivider({ variant = 'orbit' }: { variant?: 'orbit' | 'astro
     <div className="px-4 py-3 md:px-6" aria-hidden>
       <div
         className={`relative mx-auto max-w-6xl overflow-hidden rounded-3xl border border-white/10 bg-[#10131a] ${
-          variant === 'astronaut' ? 'h-56 sm:h-64' : 'h-40 sm:h-48'
+          variant === 'astronaut' ? 'h-80 sm:h-96' : 'h-44 sm:h-52'
         }`}
       >
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_50%_120%,rgba(228,224,204,0.12),transparent_55%)]" />
@@ -61,8 +61,8 @@ export function SpaceDivider({ variant = 'orbit' }: { variant?: 'orbit' | 'astro
 
         {variant === 'astronaut' && (
           <div className="absolute inset-0 flex items-center justify-end pr-2 sm:pr-16">
-            <SolarSystem>
-              <FloatingAstronaut size="sm" className="scale-[0.78]" />
+            <SolarSystem className="h-64 w-64 sm:h-80 sm:w-80">
+              <FloatingAstronaut size="sm" />
             </SolarSystem>
           </div>
         )}

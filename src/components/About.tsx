@@ -10,7 +10,7 @@ export function About() {
     <section id="about" className="scroll-mt-24 px-4 py-4 md:px-6">
       <div className="mx-auto grid max-w-6xl gap-4 lg:grid-cols-12">
         <Reveal className="lg:col-span-7">
-        <div className="h-full rounded-3xl border border-white/10 bg-[#10131a] p-6 sm:p-8">
+        <div className="tilt-card glow-card h-full rounded-3xl border border-white/10 bg-[#10131a] p-6 sm:p-8">
           <p className="text-xs font-medium uppercase tracking-[0.22em] text-zinc-400">
             {lang === 'zh' ? '关于' : 'About'}
           </p>
@@ -22,8 +22,8 @@ export function About() {
         </div>
         </Reveal>
 
-        <Reveal className="lg:col-span-5" delay={0.08}>
-        <div className="h-full rounded-3xl border border-white/10 bg-[#10131a] p-6 sm:p-8">
+        <Reveal className="lg:col-span-5" delay={0.12}>
+        <div className="tilt-card glow-card h-full rounded-3xl border border-white/10 bg-[#10131a] p-6 sm:p-8">
           <p className="text-xs font-medium uppercase tracking-[0.22em] text-zinc-400">
             {lang === 'zh' ? '课程' : 'Coursework'}
           </p>
@@ -47,8 +47,8 @@ export function About() {
         </div>
         </Reveal>
 
-        <Reveal className="lg:col-span-4" delay={0.05}>
-        <div className="h-full rounded-3xl border border-white/10 bg-[#10131a] p-6 sm:p-7">
+        <Reveal className="lg:col-span-4" delay={0.08}>
+        <div className="tilt-card glow-card h-full rounded-3xl border border-white/10 bg-[#10131a] p-6 sm:p-7">
           <p className="text-xs font-medium uppercase tracking-[0.22em] text-zinc-400">
             {lang === 'zh' ? '荣誉' : 'Honors'}
           </p>
@@ -62,8 +62,8 @@ export function About() {
         </div>
         </Reveal>
 
-        <Reveal className="lg:col-span-5" delay={0.1}>
-        <div className="h-full rounded-3xl border border-white/10 bg-[#10131a] p-6 sm:p-7">
+        <Reveal className="lg:col-span-5" delay={0.16}>
+        <div className="tilt-card glow-card h-full rounded-3xl border border-white/10 bg-[#10131a] p-6 sm:p-7">
           <p className="text-xs font-medium uppercase tracking-[0.22em] text-zinc-400">
             {lang === 'zh' ? '学生工作' : 'Student role'}
           </p>
@@ -79,8 +79,8 @@ export function About() {
         </div>
         </Reveal>
 
-        <Reveal className="lg:col-span-3" delay={0.14}>
-        <div className="h-full rounded-3xl border border-white/10 bg-[#10131a] p-6 sm:p-7">
+        <Reveal className="lg:col-span-3" delay={0.24}>
+        <div className="tilt-card glow-card h-full rounded-3xl border border-white/10 bg-[#10131a] p-6 sm:p-7">
           <p className="text-xs font-medium uppercase tracking-[0.22em] text-zinc-400">
             {lang === 'zh' ? '此外' : 'Also'}
           </p>

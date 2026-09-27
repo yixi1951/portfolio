@@ -1,6 +1,7 @@
 import { ArrowUpRight, Mail, MapPin, Phone } from 'lucide-react'
 import { profile } from '../data/profile'
 import { useI18n } from '../i18n-context'
+import { Reveal } from './Reveal'
 
 export function Contact() {
   const { lang } = useI18n()
@@ -36,6 +37,7 @@ export function Contact() {
   return (
     <section id="contact" className="scroll-mt-24 px-4 py-4 pb-10 md:px-6 md:pb-16">
       <div className="mx-auto grid max-w-6xl gap-4 lg:grid-cols-[0.9fr_1.1fr]">
+        <Reveal>
         <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-[#10131a] p-6 sm:p-8">
           <div className="moon pointer-events-none absolute -bottom-10 -right-6 h-40 w-40 rounded-full" aria-hidden />
           <div className="relative">
@@ -59,30 +61,36 @@ export function Contact() {
           </a>
           </div>
         </div>
+        </Reveal>
 
         <div className="grid gap-4 sm:grid-cols-2">
-          {items.map((item) => {
+          {items.map((item, index) => {
             const Icon = item.icon
             const body = (
-              <div className="glow-card h-full rounded-3xl border border-white/10 bg-[#10131a] p-5 transition-colors hover:bg-white/[0.03]">
+              <div className="tilt-card glow-card h-full rounded-3xl border border-white/10 bg-[#10131a] p-5 transition-colors hover:bg-white/[0.03]">
                 <Icon className="h-5 w-5 text-[#e4e0cc]" aria-hidden />
                 <p className="mt-6 text-xs font-medium uppercase tracking-[0.18em] text-zinc-400">{item.label}</p>
                 <p className="mt-2 break-all text-sm text-[#f3f0e2]">{item.value}</p>
               </div>
             )
             if (!item.href) {
-              return <div key={item.label}>{body}</div>
+              return (
+                <Reveal key={item.label} delay={index * 0.08}>
+                  {body}
+                </Reveal>
+              )
             }
             return (
-              <a
-                key={item.label}
-                href={item.href}
-                target={item.external ? '_blank' : undefined}
-                rel={item.external ? 'noopener noreferrer' : undefined}
-                className="block min-h-11"
-              >
-                {body}
-              </a>
+              <Reveal key={item.label} delay={index * 0.08}>
+                <a
+                  href={item.href}
+                  target={item.external ? '_blank' : undefined}
+                  rel={item.external ? 'noopener noreferrer' : undefined}
+                  className="block min-h-11"
+                >
+                  {body}
+                </a>
+              </Reveal>
             )
           })}
         </div>

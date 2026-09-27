@@ -64,27 +64,52 @@ a {
 .nebula {
   position: absolute;
   border-radius: 9999px;
-  filter: blur(40px);
-  opacity: 0.55;
+  filter: blur(28px);
+  opacity: 0.95;
   will-change: transform;
 }
 
 .nebula-a {
-  top: 8%;
-  right: -8rem;
-  width: 28rem;
-  height: 28rem;
-  background: radial-gradient(circle, rgba(228, 224, 204, 0.16), transparent 68%);
-  animation: nebula-drift 22s ease-in-out infinite;
+  top: 4%;
+  right: -10rem;
+  width: 40rem;
+  height: 40rem;
+  background: radial-gradient(circle, rgba(244, 241, 228, 0.42), transparent 64%);
+  animation: nebula-drift 8s ease-in-out infinite;
 }
 
 .nebula-b {
-  bottom: 6%;
-  left: -6rem;
-  width: 24rem;
-  height: 24rem;
-  background: radial-gradient(circle, rgba(110, 130, 255, 0.16), transparent 70%);
-  animation: nebula-drift 28s ease-in-out infinite reverse;
+  bottom: 0;
+  left: -8rem;
+  width: 36rem;
+  height: 36rem;
+  background: radial-gradient(circle, rgba(120, 145, 255, 0.5), transparent 66%);
+  animation: nebula-drift 10s ease-in-out infinite reverse;
+}
+
+.nebula-c {
+  top: 38%;
+  left: 28%;
+  width: 28rem;
+  height: 28rem;
+  background: radial-gradient(circle, rgba(190, 130, 255, 0.36), transparent 68%);
+  animation: nebula-drift 7s ease-in-out infinite;
+}
+
+.hero-nebula {
+  position: absolute;
+  inset: -30%;
+  background:
+    radial-gradient(circle at 18% 30%, rgba(244, 241, 228, 0.55), transparent 36%),
+    radial-gradient(circle at 82% 72%, rgba(110, 140, 255, 0.62), transparent 40%),
+    radial-gradient(circle at 48% 48%, rgba(190, 120, 255, 0.32), transparent 42%);
+  filter: blur(10px);
+  animation: hero-nebula 7s ease-in-out infinite;
+  will-change: transform;
+}
+
+.hero-title {
+  animation: title-glow 2.2s ease-in-out infinite;
 }
 
 .orbit {
@@ -92,28 +117,58 @@ a {
   left: 50%;
   top: 50%;
   border-radius: 9999px;
-  border: 1px solid rgba(255, 255, 255, 0.16);
+  border: 1.5px solid rgba(228, 224, 204, 0.72);
+  box-shadow:
+    0 0 16px rgba(180, 200, 255, 0.55),
+    inset 0 0 12px rgba(180, 200, 255, 0.35);
   animation-name: orbit-spin;
   animation-timing-function: linear;
   animation-iteration-count: infinite;
+  will-change: transform;
 }
 
 .planet {
   position: absolute;
   top: 0;
   left: 50%;
-  width: 7px;
-  height: 7px;
+  width: 14px;
+  height: 14px;
   border-radius: 9999px;
   transform: translate(-50%, -50%);
 }
 
+.planet-trail {
+  position: absolute;
+  top: 50%;
+  width: 34px;
+  height: 5px;
+  border-radius: 999px;
+  transform: translateY(-50%);
+  filter: blur(0.4px);
+}
+
 .flyby-rocket {
   position: absolute;
-  top: 18vh;
+  top: 16vh;
   left: 0;
+  width: 168px;
+  height: 56px;
   opacity: 0;
-  animation: flyby 16s linear infinite;
+  animation: flyby 7.5s linear infinite;
+  will-change: transform;
+}
+
+.flyby-rocket.alt {
+  top: 68vh;
+  width: 132px;
+  height: 44px;
+  animation-duration: 9s;
+  animation-delay: -4.2s;
+}
+
+.exhaust {
+  transform-origin: 36px 20px;
+  animation: exhaust 0.16s ease-in-out infinite;
 }
 
 .type-caret {
@@ -130,10 +185,21 @@ a {
   transition: border-color 0.25s ease, box-shadow 0.25s ease, background-color 0.25s ease;
 }
 
+.tilt-card {
+  transition: transform 0.35s ease, box-shadow 0.35s ease, border-color 0.35s ease;
+}
+
 @media (hover: hover) {
   .glow-card:hover {
-    border-color: rgba(228, 224, 204, 0.38);
-    box-shadow: 0 0 0 1px rgba(228, 224, 204, 0.16), 0 0 28px rgba(130, 150, 255, 0.14);
+    border-color: rgba(228, 224, 204, 0.55);
+    box-shadow:
+      0 0 0 1px rgba(228, 224, 204, 0.28),
+      0 16px 40px rgba(0, 0, 0, 0.35),
+      0 0 36px rgba(140, 165, 255, 0.42);
+  }
+
+  .tilt-card:hover {
+    transform: perspective(900px) rotateX(7deg) rotateY(-10deg) translateY(-8px);
   }
 }
 
@@ -142,13 +208,32 @@ a {
   animation: dash 18s linear infinite;
 }
 
-.constellation-line {
-  stroke-dasharray: 2 1.4;
-  animation: dash 28s linear infinite;
+.constellation-draw {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  animation: draw-line 0.85s ease forwards;
 }
 
 .twinkle {
-  animation: twinkle 2.8s ease-in-out infinite;
+  animation: twinkle 1.15s ease-in-out infinite;
+}
+
+.twinkle-strong {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: twinkle-strong 0.9s ease-in-out infinite;
+}
+
+.star-float {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: star-float 2.4s ease-in-out infinite;
+}
+
+.star-halo {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: halo-pulse 1.3s ease-in-out infinite;
 }
 
 .bh-ring {
@@ -165,7 +250,7 @@ a {
   );
   -webkit-mask: radial-gradient(circle, transparent 46%, #000 50%, #000 62%, transparent 66%);
   mask: radial-gradient(circle, transparent 46%, #000 50%, #000 62%, transparent 66%);
-  animation: orbit-spin-center 16s linear infinite;
+  animation: orbit-spin-center 7s linear infinite;
 }
 
 .bh-core {
@@ -187,12 +272,12 @@ a {
 
 .galaxy-arm {
   fill: none;
-  stroke: rgba(228, 224, 204, 0.5);
-  stroke-width: 1.2;
+  stroke: rgba(228, 224, 204, 0.85);
+  stroke-width: 1.8;
   stroke-linecap: round;
   transform-box: fill-box;
   transform-origin: center;
-  animation: orbit-spin-center 36s linear infinite;
+  animation: orbit-spin-center 14s linear infinite;
 }
 
 @keyframes nebula-drift {
@@ -201,7 +286,29 @@ a {
     transform: translate3d(0, 0, 0) scale(1);
   }
   50% {
-    transform: translate3d(-24px, 16px, 0) scale(1.08);
+    transform: translate3d(-90px, 54px, 0) scale(1.22);
+  }
+}
+
+@keyframes hero-nebula {
+  0%,
+  100% {
+    transform: translate3d(-8%, -5%, 0) scale(1) rotate(0deg);
+  }
+  50% {
+    transform: translate3d(10%, 8%, 0) scale(1.16) rotate(8deg);
+  }
+}
+
+@keyframes title-glow {
+  0%,
+  100% {
+    text-shadow: 0 0 8px rgba(244, 241, 228, 0.25);
+  }
+  50% {
+    text-shadow:
+      0 0 18px rgba(244, 241, 228, 0.95),
+      0 0 42px rgba(150, 175, 255, 0.75);
   }
 }
 
@@ -222,19 +329,34 @@ a {
 
 @keyframes flyby {
   0% {
-    transform: translate3d(-30vw, 0, 0) rotate(16deg);
+    transform: translate3d(-28vw, 4vh, 0) rotate(14deg);
     opacity: 0;
   }
-  6% {
-    opacity: 0.85;
+  5% {
+    opacity: 1;
   }
-  24% {
-    transform: translate3d(110vw, -12px, 0) rotate(8deg);
+  48% {
+    transform: translate3d(112vw, -8vh, 0) rotate(-8deg);
+    opacity: 1;
+  }
+  56% {
     opacity: 0;
   }
   100% {
-    transform: translate3d(110vw, -12px, 0) rotate(8deg);
+    transform: translate3d(112vw, -8vh, 0) rotate(-8deg);
     opacity: 0;
+  }
+}
+
+@keyframes exhaust {
+  0%,
+  100% {
+    opacity: 0.45;
+    transform: scaleX(0.75);
+  }
+  50% {
+    opacity: 1;
+    transform: scaleX(1.2);
   }
 }
 
@@ -258,10 +380,69 @@ a {
 @keyframes twinkle {
   0%,
   100% {
-    opacity: 0.35;
+    opacity: 0.15;
   }
   50% {
     opacity: 1;
+  }
+}
+
+@keyframes twinkle-strong {
+  0%,
+  100% {
+    opacity: 0.15;
+    transform: scale(0.65);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.7);
+  }
+}
+
+@keyframes star-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-7px);
+  }
+}
+
+@keyframes halo-pulse {
+  0%,
+  100% {
+    opacity: 0.25;
+    transform: scale(0.8);
+  }
+  50% {
+    opacity: 0.95;
+    transform: scale(1.55);
+  }
+}
+
+@keyframes draw-line {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@media (max-width: 768px) {
+  .flyby-rocket {
+    width: 108px;
+    height: 36px;
+  }
+
+  .flyby-rocket.alt {
+    width: 88px;
+    height: 30px;
+  }
+
+  .nebula-a,
+  .nebula-b,
+  .nebula-c {
+    filter: blur(22px);
+    opacity: 0.8;
   }
 }
 
@@ -277,5 +458,9 @@ a {
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
+  }
+
+  .tilt-card:hover {
+    transform: none;
   }
 }

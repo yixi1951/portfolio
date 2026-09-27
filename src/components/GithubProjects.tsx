@@ -58,7 +58,17 @@ function LanguageBadge({ language }: { language: string }) {
   )
 }
 
-function ProjectCard({ repo, lang, featured }: { repo: DisplayRepo; lang: Lang; featured: boolean }) {
+function ProjectCard({
+  repo,
+  lang,
+  featured,
+  index,
+}: {
+  repo: DisplayRepo
+  lang: Lang
+  featured: boolean
+  index: number
+}) {
   const c = copy[lang]
   const reduce = useReducedMotion()
   const pushed = formatDate(repo.pushed_at, lang)
@@ -67,10 +77,23 @@ function ProjectCard({ repo, lang, featured }: { repo: DisplayRepo; lang: Lang; 
   return (
     <motion.article
       className="glow-card flex h-full flex-col rounded-3xl border border-white/10 bg-[#0c0e14] p-5 sm:p-6"
-      initial={reduce ? false : { opacity: 0, y: 16 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: '0px 0px -40px' }}
-      transition={{ duration: 0.45 }}
+      style={{ transformPerspective: 900 }}
+      initial={reduce ? false : { opacity: 0, y: 64, scale: 0.88, filter: 'blur(8px)' }}
+      whileInView={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
+      whileHover={
+        reduce
+          ? undefined
+          : {
+              rotateX: 8,
+              rotateY: -10,
+              y: -10,
+              scale: 1.03,
+              boxShadow: '0 24px 48px rgba(0,0,0,0.45), 0 0 42px rgba(150,170,255,0.45)',
+              transition: { duration: 0.28, delay: 0 },
+            }
+      }
+      viewport={{ once: true, margin: '0px 0px -48px' }}
+      transition={{ duration: 0.7, delay: index * 0.1, ease: [0.16, 1, 0.3, 1] }}
     >
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex flex-wrap items-center gap-2">
@@ -191,8 +214,8 @@ export function GithubProjects() {
 
         <h3 className="mt-8 text-xs font-medium uppercase tracking-[0.2em] text-zinc-400">{c.featured}</h3>
         <div className="mt-4 grid gap-4 lg:grid-cols-3">
-          {featured.map((repo) => (
-            <ProjectCard key={repo.name} repo={repo} lang={lang} featured />
+          {featured.map((repo, index) => (
+            <ProjectCard key={repo.name} repo={repo} lang={lang} featured index={index} />
           ))}
         </div>
 
@@ -200,8 +223,8 @@ export function GithubProjects() {
           <>
             <h3 className="mt-10 text-xs font-medium uppercase tracking-[0.2em] text-zinc-400">{c.more}</h3>
             <div className="mt-4 grid gap-4 md:grid-cols-2">
-              {rest.map((repo) => (
-                <ProjectCard key={repo.name} repo={repo} lang={lang} featured={false} />
+              {rest.map((repo, index) => (
+                <ProjectCard key={repo.name} repo={repo} lang={lang} featured={false} index={index} />
               ))}
             </div>
           </>

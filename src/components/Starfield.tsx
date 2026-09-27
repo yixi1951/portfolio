@@ -27,10 +27,10 @@ function makeStars(count: number): Star[] {
   return Array.from({ length: count }, (_, index) => ({
     x: hash(index + 1),
     y: hash(index + 19),
-    z: 0.25 + hash(index + 37) * 0.75,
-    r: hash(index + 53) > 0.92 ? 1.8 : hash(index + 71) > 0.7 ? 1.25 : 0.7,
+    z: 0.2 + hash(index + 37) * 0.8,
+    r: hash(index + 53) > 0.9 ? 2.6 : hash(index + 71) > 0.62 ? 1.7 : 1,
     phase: hash(index + 91) * Math.PI * 2,
-    speed: 0.0006 + hash(index + 11) * 0.0018,
+    speed: 0.004 + hash(index + 11) * 0.008,
   }))
 }
 
@@ -47,11 +47,12 @@ export function Starfield() {
     const fineQuery = window.matchMedia('(pointer: fine)')
     const mobileQuery = window.matchMedia('(max-width: 768px)')
 
-    let stars = makeStars(mobileQuery.matches ? 72 : 150)
+    let stars = makeStars(mobileQuery.matches ? 130 : 280)
     let meteors: Meteor[] = []
     let frame = 0
     let stopped = false
     let paused = false
+    let lastMeteor = 0
     const pointer = { x: 0, y: 0 }
 
     const resize = () => {
@@ -71,8 +72,8 @@ export function Starfield() {
       meteors.push({
         x: fromLeft ? -40 : width * (0.2 + hash(performance.now() + 3) * 0.6),
         y: fromLeft ? height * (0.05 + hash(performance.now() + 5) * 0.45) : -20,
-        vx: fromLeft ? 7.5 + hash(performance.now() + 7) * 4 : 3 + hash(performance.now() + 9),
-        vy: 2.2 + hash(performance.now() + 13) * 2,
+        vx: fromLeft ? 9 + hash(performance.now() + 7) * 5 : 5 + hash(performance.now() + 9) * 3,
+        vy: 3.2 + hash(performance.now() + 13) * 2.4,
         life: 1,
         max: 1,
       })
@@ -87,42 +88,58 @@ export function Starfield() {
       context.clearRect(0, 0, width, height)
 
       for (const star of stars) {
-        const driftX = reduce ? 0 : pointer.x * 28 * star.z
-        const driftY = reduce ? 0 : pointer.y * 16 * star.z + scroll * (mobile ? 0.012 : 0.02) * star.z
+        const driftX = reduce ? 0 : pointer.x * (mobile ? 70 : 180) * star.z
+        const driftY = reduce ? 0 : pointer.y * (mobile ? 40 : 110) * star.z + scroll * (mobile ? 0.07 : 0.12) * star.z
         const px = ((star.x * width + driftX) % width + width) % width
         const py = ((star.y * height + driftY) % height + height) % height
-        const twinkle = reduce ? 0.75 : 0.35 + 0.65 * (0.5 + 0.5 * Math.sin(time * star.speed + star.phase))
+        const twinkle = reduce ? 0.8 : 0.2 + 0.8 * (0.5 + 0.5 * Math.sin(time * star.speed + star.phase))
         context.globalAlpha = twinkle
-        context.fillStyle = star.z > 0.75 ? '#f7f4ea' : '#c9d2ff'
+        context.fillStyle = star.z > 0.72 ? '#fffaf0' : '#d5defc'
         context.beginPath()
-        context.arc(px, py, star.r, 0, Math.PI * 2)
+        context.arc(px, py, star.r * (0.75 + twinkle * 0.45), 0, Math.PI * 2)
         context.fill()
+        if (star.r > 2) {
+          context.globalAlpha = twinkle * 0.35
+          context.beginPath()
+          context.arc(px, py, star.r * 2.4, 0, Math.PI * 2)
+          context.fill()
+        }
       }
 
       context.globalAlpha = 1
       if (!reduce) {
-        const cap = mobile ? 1 : 2
-        if (meteors.length < cap && hash(time) > 0.997) spawnMeteor(width, height)
+        const cap = mobile ? 2 : 4
+        const gap = mobile ? 1400 : 650
+        if (meteors.length < cap && time - lastMeteor > gap) {
+          spawnMeteor(width, height)
+          lastMeteor = time
+        }
         meteors = meteors.filter((meteor) => meteor.life > 0)
         for (const meteor of meteors) {
           meteor.x += meteor.vx
           meteor.y += meteor.vy
-          meteor.life -= 0.012
-          const tail = 14
+          meteor.life -= 0.007
+          const tail = 46
           const gradient = context.createLinearGradient(
             meteor.x,
             meteor.y,
             meteor.x - meteor.vx * tail,
             meteor.y - meteor.vy * tail,
           )
-          gradient.addColorStop(0, `rgba(247,244,234,${meteor.life})`)
-          gradient.addColorStop(1, 'rgba(247,244,234,0)')
+          gradient.addColorStop(0, `rgba(255,250,240,${meteor.life})`)
+          gradient.addColorStop(0.35, `rgba(190,205,255,${meteor.life * 0.7})`)
+          gradient.addColorStop(1, 'rgba(190,205,255,0)')
           context.strokeStyle = gradient
-          context.lineWidth = 1.4
+          context.lineWidth = 2.6
+          context.lineCap = 'round'
           context.beginPath()
           context.moveTo(meteor.x, meteor.y)
           context.lineTo(meteor.x - meteor.vx * tail, meteor.y - meteor.vy * tail)
           context.stroke()
+          context.fillStyle = `rgba(255,250,240,${meteor.life})`
+          context.beginPath()
+          context.arc(meteor.x, meteor.y, 2.4, 0, Math.PI * 2)
+          context.fill()
         }
       }
     }
@@ -139,7 +156,7 @@ export function Starfield() {
     }
 
     const onResize = () => {
-      const nextCount = mobileQuery.matches ? 72 : 150
+      const nextCount = mobileQuery.matches ? 130 : 280
       if (stars.length !== nextCount) stars = makeStars(nextCount)
       resize()
       if (motionQuery.matches) draw(0)
@@ -174,6 +191,7 @@ export function Starfield() {
     <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden" aria-hidden>
       <div className="nebula nebula-a" />
       <div className="nebula nebula-b" />
+      <div className="nebula nebula-c" />
       <canvas ref={canvasRef} className="absolute inset-0 h-full w-full" />
     </div>
   )

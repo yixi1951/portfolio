@@ -14,14 +14,20 @@ export function Hero() {
     <section id="top" className="px-4 pb-2 pt-6 md:px-6 md:pt-10">
       <div className="mx-auto grid max-w-6xl gap-4 lg:grid-cols-5 lg:gap-5">
         <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-[#10131a] p-6 sm:p-8 md:p-10 lg:col-span-3">
-          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,rgba(228,224,204,0.14),transparent_46%),radial-gradient(ellipse_at_bottom_right,rgba(90,120,255,0.12),transparent_42%)]" />
+          {reduce ? (
+            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,rgba(228,224,204,0.14),transparent_46%),radial-gradient(ellipse_at_bottom_right,rgba(90,120,255,0.12),transparent_42%)]" />
+          ) : (
+            <div className="hero-nebula pointer-events-none" />
+          )}
           <div className="noise-overlay pointer-events-none absolute inset-0 opacity-[0.12]" />
 
           <div className="relative z-10 max-w-2xl">
             <p className="text-xs font-medium uppercase tracking-[0.22em] text-zinc-400">
               {profile.school[lang]} · {profile.role[lang]}
             </p>
-            <h1 className="mt-5 text-5xl font-medium leading-[0.95] tracking-tight text-[#f6f3e6] sm:text-6xl md:text-7xl">
+            <h1
+              className={`mt-5 text-5xl font-medium leading-[0.95] tracking-tight text-[#f6f3e6] sm:text-6xl md:text-7xl ${reduce ? '' : 'hero-title'}`}
+            >
               {reduce ? (
                 name
               ) : (
@@ -29,9 +35,9 @@ export function Hero() {
                   <motion.span
                     key={`${character}-${index}`}
                     className="inline-block"
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.35, delay: index * 0.04 }}
+                    initial={{ opacity: 0, y: 28, scale: 0.92 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    transition={{ duration: 0.45, delay: index * 0.06 }}
                   >
                     {character === ' ' ? '\u00A0' : character}
                   </motion.span>
@@ -109,10 +115,10 @@ export function Hero() {
           <p className="mt-4 text-sm text-zinc-400">{profile.location[lang]}</p>
         </div>
 
-        <div className="relative hidden min-h-48 items-center justify-center overflow-hidden rounded-3xl border border-white/10 bg-[#10131a] lg:col-span-2 lg:flex">
-          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_60%,rgba(228,224,204,0.14),transparent_62%)]" />
-          <SolarSystem>
-            <span className="h-3 w-3 rounded-full bg-[#f7f4ea] shadow-[0_0_18px_rgba(247,244,234,0.85)]" />
+        <div className="relative hidden min-h-80 items-center justify-center overflow-hidden rounded-3xl border border-white/10 bg-[#10131a] md:flex lg:col-span-2">
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_60%,rgba(228,224,204,0.2),transparent_62%)]" />
+          <SolarSystem className="h-72 w-72">
+            <span className="h-8 w-8 rounded-full bg-[radial-gradient(circle_at_35%_35%,#fff,#f4e7b2_60%,#c9843a)] shadow-[0_0_28px_rgba(255,220,140,0.95)]" />
           </SolarSystem>
         </div>
       </div>
