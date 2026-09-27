@@ -8,8 +8,8 @@ export function Hero() {
 
   return (
     <section id="top" className="px-4 pb-2 pt-6 md:px-6 md:pt-10">
-      <div className="mx-auto grid max-w-6xl gap-4 lg:grid-cols-[minmax(0,1.35fr)_minmax(18rem,0.72fr)] lg:gap-5">
-        <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-[#10131a] p-6 sm:p-8 md:p-10">
+      <div className="mx-auto grid max-w-6xl gap-4 lg:grid-cols-5 lg:gap-5">
+        <div className="relative overflow-hidden rounded-3xl border border-white/10 bg-[#10131a] p-6 sm:p-8 md:p-10 lg:col-span-3">
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_left,rgba(228,224,204,0.14),transparent_46%),radial-gradient(ellipse_at_bottom_right,rgba(90,120,255,0.12),transparent_42%)]" />
           <div className="noise-overlay pointer-events-none absolute inset-0 opacity-[0.12]" />
 
@@ -54,44 +54,48 @@ export function Hero() {
           </div>
         </div>
 
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1">
-          <div className="relative hidden h-48 items-center justify-center overflow-hidden rounded-3xl border border-white/10 bg-[#10131a] lg:flex" aria-hidden>
-            <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_60%,rgba(228,224,204,0.12),transparent_62%)]" />
-            <FloatingAstronaut size="sm" />
-          </div>
-          <div className="rounded-3xl bg-[#e4e0cc] p-6 text-[#16160f]">
-            <p className="text-xs font-medium uppercase tracking-[0.2em] text-black/55">
+        <div className="flex flex-col justify-between rounded-3xl bg-[#e4e0cc] p-6 text-[#16160f] lg:col-span-2">
+          <div>
+            <p className="text-xs font-medium uppercase tracking-[0.2em] text-black/70">
               {lang === 'zh' ? '在读' : 'Studying'}
             </p>
             <p className="mt-4 text-2xl font-medium leading-tight">{profile.school[lang]}</p>
             <p className="mt-2 text-sm leading-relaxed text-black/75">{profile.major[lang]}</p>
-            <dl className="mt-5 grid grid-cols-2 gap-4 text-sm">
-              <div>
-                <dt className="text-black/50">{lang === 'zh' ? '时间' : 'Years'}</dt>
-                <dd className="mt-1 font-medium">{profile.period}</dd>
-              </div>
-              <div>
-                <dt className="text-black/50">GPA</dt>
-                <dd className="mt-1 font-medium">
-                  {profile.gpa}
-                  <span className="mt-0.5 block text-xs font-normal text-black/60">{profile.gpaRank[lang]}</span>
-                </dd>
-              </div>
-            </dl>
           </div>
+          <dl className="mt-5 grid grid-cols-2 gap-4 text-sm">
+            <div>
+              <dt className="text-black/70">{lang === 'zh' ? '时间' : 'Years'}</dt>
+              <dd className="mt-1 font-medium">{profile.period}</dd>
+            </div>
+            <div>
+              <dt className="text-black/70">GPA</dt>
+              <dd className="mt-1 font-medium">
+                {profile.gpa}
+                <span className="mt-0.5 block text-xs font-normal text-black/70">{profile.gpaRank[lang]}</span>
+              </dd>
+            </div>
+          </dl>
+        </div>
 
-          <div className="rounded-3xl border border-white/10 bg-[#10131a] p-6">
-            <p className="text-xs font-medium uppercase tracking-[0.2em] text-zinc-400">
-              {lang === 'zh' ? '最近推送' : 'Latest push'}
-            </p>
-            <p className="mt-4 text-lg font-medium leading-snug text-[#f3f0e2]">OpinionTradingWorkflow</p>
-            <p className="mt-2 text-sm leading-relaxed text-zinc-300">
-              {lang === 'zh'
-                ? '2026 年 9 月 22 日仍在更新：六平台舆情、DeepSeek 打分，以及情绪 / 技术 / 基本面共识。'
-                : 'Still moving on 22 Sep 2026: six-source opinion ingest, DeepSeek scoring, and a sentiment / technical / fundamental consensus.'}
-            </p>
-            <p className="mt-4 text-sm text-zinc-400">{profile.location[lang]}</p>
-          </div>
+        <div className="rounded-3xl border border-white/10 bg-[#10131a] p-6 lg:col-span-3">
+          <p className="text-xs font-medium uppercase tracking-[0.2em] text-zinc-400">
+            {lang === 'zh' ? '最近推送' : 'Latest push'}
+          </p>
+          <p className="mt-4 text-lg font-medium leading-snug text-[#f3f0e2]">OpinionTradingWorkflow</p>
+          <p className="mt-2 text-sm leading-relaxed text-zinc-300">
+            {lang === 'zh'
+              ? '2026 年 9 月 22 日仍在更新：六平台舆情、DeepSeek 打分，以及情绪 / 技术 / 基本面共识。'
+              : 'Still moving on 22 Sep 2026: six-source opinion ingest, DeepSeek scoring, and a sentiment / technical / fundamental consensus.'}
+          </p>
+          <p className="mt-4 text-sm text-zinc-400">{profile.location[lang]}</p>
+        </div>
+
+        <div
+          className="relative hidden min-h-44 items-center justify-center overflow-hidden rounded-3xl border border-white/10 bg-[#10131a] lg:col-span-2 lg:flex"
+          aria-hidden
+        >
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_50%_60%,rgba(228,224,204,0.14),transparent_62%)]" />
+          <FloatingAstronaut size="sm" />
         </div>
       </div>
     </section>
