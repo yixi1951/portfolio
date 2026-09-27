@@ -1,8 +1,5 @@
-import { createContext, useContext } from 'react'
-
-type Lang = 'zh' | 'en'
-
-const I18nContext = createContext<{ lang: Lang; toggleLang: () => void } | null>(null)
+import type { ReactNode } from 'react'
+import { I18nContext, type Lang } from './i18n-context'
 
 export function I18nProvider({
   lang,
@@ -11,15 +8,7 @@ export function I18nProvider({
 }: {
   lang: Lang
   toggleLang: () => void
-  children: React.ReactNode
+  children: ReactNode
 }) {
   return <I18nContext.Provider value={{ lang, toggleLang }}>{children}</I18nContext.Provider>
 }
-
-export function useI18n() {
-  const ctx = useContext(I18nContext)
-  if (!ctx) throw new Error('useI18n must be used within I18nProvider')
-  return ctx
-}
-
-export type { Lang }

@@ -1,4 +1,4 @@
-import { motion } from 'framer-motion'
+import { motion, useReducedMotion } from 'framer-motion'
 import { useMemo } from 'react'
 
 function seededRandom(seed: number) {
@@ -7,8 +7,9 @@ function seededRandom(seed: number) {
 }
 
 export function Starfield() {
+  const reduce = useReducedMotion()
   const stars = useMemo(() => {
-    return Array.from({ length: 80 }, (_, i) => ({
+    return Array.from({ length: 48 }, (_, i) => ({
       id: i,
       left: `${seededRandom(i * 1.1) * 100}%`,
       top: `${seededRandom(i * 2.3) * 100}%`,
@@ -40,19 +41,21 @@ export function Starfield() {
             height: s.size,
             boxShadow: s.size > 1.5 ? '0 0 8px rgba(255,255,255,0.5)' : undefined,
           }}
-          animate={{ opacity: [0.15, 0.9, 0.2] }}
+          initial={{ opacity: 0.55 }}
+          animate={reduce ? undefined : { opacity: [0.2, 0.9, 0.3] }}
           transition={{ duration: s.duration, delay: s.delay, repeat: Infinity, ease: 'easeInOut' }}
         />
       ))}
-      {shooting.map((m, i) => (
-        <motion.div
-          key={i}
-          className="absolute h-px w-24 bg-gradient-to-r from-transparent via-primary/80 to-transparent"
-          style={{ top: m.top, left: '-6rem' }}
-          animate={{ left: ['-6rem', '110%'], opacity: [0, 1, 0] }}
-          transition={{ duration: m.duration, delay: m.delay, repeat: Infinity, repeatDelay: 12, ease: 'easeOut' }}
-        />
-      ))}
+      {!reduce &&
+        shooting.map((m, i) => (
+          <motion.div
+            key={i}
+            className="absolute h-px w-24 bg-gradient-to-r from-transparent via-primary/80 to-transparent"
+            style={{ top: m.top, left: '-6rem' }}
+            animate={{ left: ['-6rem', '110%'], opacity: [0, 1, 0] }}
+            transition={{ duration: m.duration, delay: m.delay, repeat: Infinity, repeatDelay: 12, ease: 'easeOut' }}
+          />
+        ))}
       <motion.div
         className="absolute -right-32 top-1/4 h-96 w-96 rounded-full bg-[radial-gradient(circle,rgba(225,224,204,0.06),transparent_65%)] blur-3xl"
         animate={{ scale: [1, 1.08, 1], opacity: [0.4, 0.7, 0.4] }}

@@ -1,179 +1,218 @@
-import { motion } from 'framer-motion'
-import { Code2, ExternalLink, Loader2, Rocket, Star } from 'lucide-react'
+import { motion, useReducedMotion } from 'framer-motion'
+import { ArrowUpRight, Star } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { profile } from '../data/profile'
-import { useI18n } from '../i18n'
+import { useI18n, type Lang } from '../i18n-context'
 import { fetchNonForkRepos, toDisplayRepos, type DisplayRepo } from '../lib/githubRepos'
+import { languageColor } from '../lib/languages'
 
 const copy = {
   zh: {
-    label: '开源项目',
-    title: '我做过的项目',
-    desc: '自己写的作品：舆情选股、农业 AI 和表格核验。点卡片打开仓库。',
-    stars: '星标',
-    updated: '更新',
-    viewRepo: '打开仓库',
+    label: '项目',
+    title: '公开仓库',
+    desc: '精选是近期比较完整的原创仓库，其余原创仓库列在后面。Fork，以及名为 portfolio 的本站仓库，没有放进来。',
+    featured: '精选',
+    more: '其他原创仓库',
+    pushed: '推送于',
+    viewRepo: 'GitHub',
+    homepage: '主页',
     allOnGithub: '在 GitHub 查看全部',
+    live: '星标和推送时间来自 GitHub',
+    saved: '展示已核对的仓库资料。实时星标暂时没有取到。',
+    noDescription: '仓库没有填写简介',
   },
   en: {
-    label: 'Open source',
-    title: 'Things I have built',
-    desc: 'My own work: sentiment-driven stock research, crop-disease AI, and spreadsheet recon. Click a card to open the repo.',
-    stars: 'Stars',
-    updated: 'Updated',
-    viewRepo: 'Open repo',
-    allOnGithub: 'See all on GitHub',
+    label: 'Projects',
+    title: 'Public repositories',
+    desc: 'Featured cards are the more complete original repos. Other original work follows. Forks, and the portfolio repo for this site, are left out.',
+    featured: 'Featured',
+    more: 'Other original repos',
+    pushed: 'Pushed',
+    viewRepo: 'GitHub',
+    homepage: 'Homepage',
+    allOnGithub: 'See everything on GitHub',
+    live: 'Stars and push times come from GitHub',
+    saved: 'Showing checked repo details. Live star counts are unavailable right now.',
+    noDescription: 'This repository has no description',
   },
 } as const
 
-function formatDate(iso: string, lang: 'zh' | 'en') {
-  const d = new Date(iso)
-  return d.toLocaleDateString(lang === 'zh' ? 'zh-CN' : 'en-US', {
+function formatDate(iso: string, lang: Lang) {
+  const date = new Date(iso)
+  if (Number.isNaN(date.getTime())) return ''
+  return new Intl.DateTimeFormat(lang === 'zh' ? 'zh-CN' : 'en-US', {
     year: 'numeric',
     month: 'short',
     day: 'numeric',
-  })
+  }).format(date)
+}
+
+function LanguageBadge({ language }: { language: string }) {
+  return (
+    <span className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-black/30 px-2.5 py-1 text-xs text-zinc-100">
+      <span className="h-2 w-2 rounded-full" style={{ backgroundColor: languageColor(language) }} aria-hidden />
+      {language}
+    </span>
+  )
+}
+
+function ProjectCard({ repo, lang, featured }: { repo: DisplayRepo; lang: Lang; featured: boolean }) {
+  const c = copy[lang]
+  const reduce = useReducedMotion()
+  const pushed = formatDate(repo.pushed_at, lang)
+
+  return (
+    <motion.article
+      className="flex h-full flex-col rounded-3xl border border-white/10 bg-[#0c0e14] p-5 transition-colors hover:border-[#e4e0cc]/30 hover:bg-white/[0.03] sm:p-6"
+      initial={reduce ? false : { opacity: 0, y: 16 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: '0px 0px -40px' }}
+      transition={{ duration: 0.45 }}
+    >
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          {repo.language && <LanguageBadge language={repo.language} />}
+          {repo.also.slice(0, 2).map((language) => (
+            <span key={language} className="text-xs text-zinc-400">
+              {language}
+            </span>
+          ))}
+        </div>
+        {repo.period && <span className="text-xs text-zinc-400">{repo.period}</span>}
+      </div>
+
+      <h3 className={`mt-4 font-medium tracking-tight text-[#f6f3e6] ${featured ? 'text-2xl' : 'text-xl'}`}>
+        {repo.title[lang]}
+      </h3>
+      {repo.title[lang] !== repo.name && (
+        <p className="mt-1 font-mono text-xs text-zinc-400">{repo.name}</p>
+      )}
+      <p className="mt-3 text-sm leading-relaxed text-zinc-300">{repo.summary[lang] || c.noDescription}</p>
+
+      {featured && repo.highlights.length > 0 && (
+        <ul className="mt-4 space-y-2">
+          {repo.highlights.map((item) => (
+            <li key={item.en} className="flex gap-2 text-sm leading-relaxed text-zinc-400">
+              <span className="mt-2 h-1 w-1 shrink-0 rounded-full bg-[#e4e0cc]" aria-hidden />
+              <span>{item[lang]}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {repo.tags.length > 0 && (
+        <div className="mt-4 flex flex-wrap gap-1.5">
+          {repo.tags.map((tag) => (
+            <span key={tag} className="rounded-full bg-white/[0.05] px-2.5 py-1 text-xs text-zinc-300">
+              {tag}
+            </span>
+          ))}
+        </div>
+      )}
+
+      <div className="mt-auto flex flex-wrap items-center gap-x-4 gap-y-2 pt-5 text-sm">
+        <a
+          href={repo.html_url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex min-h-11 items-center gap-1 rounded-full text-[#e4e0cc] underline-offset-4 hover:underline"
+        >
+          {c.viewRepo}
+          <ArrowUpRight className="h-4 w-4" aria-hidden />
+        </a>
+        {repo.homepage && (
+          <a
+            href={repo.homepage}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex min-h-11 items-center gap-1 text-zinc-300 underline-offset-4 hover:text-[#f3f0e2] hover:underline"
+          >
+            {c.homepage}
+            <ArrowUpRight className="h-3.5 w-3.5" aria-hidden />
+          </a>
+        )}
+        {repo.stargazers_count > 0 && (
+          <span className="inline-flex items-center gap-1 text-zinc-400">
+            <Star className="h-3.5 w-3.5" aria-hidden />
+            {repo.stargazers_count}
+          </span>
+        )}
+        {pushed && (
+          <span className="text-zinc-400">
+            {c.pushed} {pushed}
+          </span>
+        )}
+      </div>
+    </motion.article>
+  )
 }
 
 export function GithubProjects() {
   const { lang } = useI18n()
   const c = copy[lang]
-  const [repos, setRepos] = useState<DisplayRepo[]>([])
-  const [status, setStatus] = useState<'loading' | 'ok'>('loading')
+  const [repos, setRepos] = useState<DisplayRepo[]>(() => toDisplayRepos([]))
+  const [source, setSource] = useState<'pending' | 'saved' | 'live'>('pending')
 
   useEffect(() => {
     let cancelled = false
-    setStatus('loading')
     fetchNonForkRepos()
       .then((list) => {
-        if (!cancelled) {
-          setRepos(toDisplayRepos(list))
-          setStatus('ok')
-        }
+        if (cancelled) return
+        setRepos(toDisplayRepos(list))
+        setSource('live')
       })
       .catch(() => {
-        if (!cancelled) {
-          setRepos(toDisplayRepos([]))
-          setStatus('ok')
-        }
+        if (!cancelled) setSource('saved')
       })
     return () => {
       cancelled = true
     }
   }, [])
 
+  const featured = repos.filter((repo) => repo.featured)
+  const rest = repos.filter((repo) => !repo.featured)
+
   return (
-    <section id="github-projects" className="relative px-4 py-4 md:px-6">
-      <div className="relative overflow-hidden rounded-[1.75rem] border border-white/5 bg-[#101010] p-5 sm:p-7 md:p-9">
-        <motion.div
-          className="pointer-events-none absolute -right-8 top-8 opacity-40 md:opacity-70"
-          animate={{ x: [0, 12, 0], y: [0, -8, 0] }}
-          transition={{ duration: 10, repeat: Infinity, ease: 'easeInOut' }}
-        >
-          <Rocket className="h-16 w-16 rotate-45 text-primary/30" />
-        </motion.div>
-        <div className="relative z-10 flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+    <section id="projects" className="scroll-mt-24 px-4 py-4 md:px-6">
+      <div className="mx-auto max-w-6xl">
+        <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
           <div>
-            <p className="text-[9px] uppercase tracking-[0.3em] text-primary/40 sm:text-[10px]">{c.label}</p>
-            <h2 className="mt-3 text-2xl font-medium text-[#E1E0CC] sm:text-3xl">{c.title}</h2>
+            <p className="text-xs font-medium uppercase tracking-[0.22em] text-zinc-400">{c.label}</p>
+            <h2 className="mt-3 text-3xl font-medium tracking-tight text-[#f6f3e6] sm:text-4xl">{c.title}</h2>
           </div>
-          <p className="max-w-xl text-xs leading-relaxed text-gray-400 sm:text-sm">{c.desc}</p>
+          <p className="max-w-xl text-sm leading-relaxed text-zinc-400">{c.desc}</p>
+        </div>
+        {source !== 'pending' && (
+          <p className="mt-3 text-xs text-zinc-400">{source === 'live' ? c.live : c.saved}</p>
+        )}
+
+        <h3 className="mt-8 text-xs font-medium uppercase tracking-[0.2em] text-zinc-400">{c.featured}</h3>
+        <div className="mt-4 grid gap-4 lg:grid-cols-3">
+          {featured.map((repo) => (
+            <ProjectCard key={repo.name} repo={repo} lang={lang} featured />
+          ))}
         </div>
 
-        {status === 'loading' && (
-          <div className="mt-10 flex items-center justify-center gap-2 text-sm text-gray-500">
-            <Loader2 className="h-5 w-5 animate-spin text-primary/60" />
-            <span>{lang === 'zh' ? '正在对接空间站…' : 'Docking with the station…'}</span>
-          </div>
+        {rest.length > 0 && (
+          <>
+            <h3 className="mt-10 text-xs font-medium uppercase tracking-[0.2em] text-zinc-400">{c.more}</h3>
+            <div className="mt-4 grid gap-4 md:grid-cols-2">
+              {rest.map((repo) => (
+                <ProjectCard key={repo.name} repo={repo} lang={lang} featured={false} />
+              ))}
+            </div>
+          </>
         )}
 
-        {status === 'ok' && (
-          <div className="relative z-10 mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {repos.map((repo, index) => (
-              <motion.a
-                key={repo.html_url + repo.name}
-                href={repo.html_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                drag
-                dragElastic={0.06}
-                dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
-                whileHover={{ y: -4, borderColor: 'rgba(225,224,204,0.25)' }}
-                whileDrag={{ scale: 1.02 }}
-                className="group relative overflow-hidden rounded-[1.5rem] border border-white/5 bg-black/35 p-5 transition-colors hover:bg-white/[0.04]"
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.45, delay: Math.min(index * 0.06, 0.36) }}
-              >
-                <motion.div
-                  className="pointer-events-none absolute -right-6 -top-6 h-24 w-24 rounded-full border border-primary/10 bg-primary/5"
-                  animate={{ rotate: 360 }}
-                  transition={{ duration: 40, repeat: Infinity, ease: 'linear' }}
-                />
-                <div className="flex items-start justify-between gap-2">
-                  <div>
-                    <h3 className="text-lg font-medium text-primary group-hover:text-[#f5f4e0]">
-                      {repo.title[lang]}
-                    </h3>
-                    {repo.title[lang] !== repo.name && (
-                      <p className="mt-1 font-mono text-[11px] text-gray-600">{repo.name}</p>
-                    )}
-                  </div>
-                  <ExternalLink className="mt-0.5 h-4 w-4 shrink-0 text-gray-500 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
-                </div>
-                <p className="mt-3 min-h-[4.5rem] text-sm leading-relaxed text-gray-400">
-                  {repo.summary[lang]}
-                </p>
-                {repo.tags.length > 0 && (
-                  <div className="mt-4 flex flex-wrap gap-1.5">
-                    {repo.tags.map((tag) => (
-                      <span
-                        key={tag}
-                        className="rounded-full border border-white/8 bg-white/[0.03] px-2 py-0.5 text-[10px] tracking-wide text-gray-500"
-                      >
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-                )}
-                <div className="mt-4 flex flex-wrap items-center gap-3 text-xs text-gray-500">
-                  {repo.language && (
-                    <span className="inline-flex items-center gap-1.5 rounded-full border border-white/8 bg-white/[0.03] px-2 py-1">
-                      <span className="h-1.5 w-1.5 rounded-full bg-primary/70" />
-                      {repo.language}
-                    </span>
-                  )}
-                  {repo.stargazers_count > 0 && (
-                    <span className="inline-flex items-center gap-1">
-                      <Star className="h-3.5 w-3.5 text-primary/50" />
-                      {repo.stargazers_count} {c.stars}
-                    </span>
-                  )}
-                  {repo.updated_at && (
-                    <span>
-                      {c.updated} {formatDate(repo.updated_at, lang)}
-                    </span>
-                  )}
-                </div>
-                <span className="mt-4 inline-flex items-center gap-1 text-xs text-primary/70 opacity-0 transition-opacity group-hover:opacity-100">
-                  {c.viewRepo} →
-                </span>
-              </motion.a>
-            ))}
-          </div>
-        )}
-
-        <motion.a
+        <a
           href={profile.githubUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="relative z-10 mt-8 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/[0.03] px-5 py-3 text-sm text-gray-300 transition-colors hover:border-primary/25 hover:bg-white/[0.06] hover:text-primary"
-          whileHover={{ gap: 12 }}
+          className="mt-6 inline-flex min-h-11 items-center gap-2 rounded-full border border-white/15 px-5 py-2.5 text-sm text-zinc-100 transition-colors hover:border-[#e4e0cc]/40 hover:bg-white/[0.05]"
         >
-          <Code2 className="h-4 w-4" />
           {c.allOnGithub}
-        </motion.a>
+          <ArrowUpRight className="h-4 w-4" aria-hidden />
+        </a>
       </div>
     </section>
   )
