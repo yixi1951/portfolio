@@ -60,16 +60,11 @@ export function SpaceDivider({ variant = 'orbit' }: { variant?: 'orbit' | 'astro
           <p className="pointer-events-none absolute bottom-3 right-4 z-10 text-[11px] tracking-wide text-zinc-500">
             {variant === 'orbit'
               ? lang === 'zh'
-                ? '拖动转动 · 滚动改变距离'
-                : 'Drag to orbit · scroll changes distance'
+                ? '拖动倾斜 · 悬停播放'
+                : 'Drag to tilt · hover to play'
               : lang === 'zh'
-                ? '拖动旋转 · 点击加速'
-                : 'Drag to rotate · click to spin'}
-          </p>
-        )}
-        {variant === 'astronaut' && (
-          <p className="pointer-events-none absolute bottom-3 left-5 z-10 text-[10px] tracking-wide text-zinc-600">
-            NASA 3D Resources
+                ? '拖动轻推 · 悬停看说明'
+                : 'Drag to nudge · hover for credit'}
           </p>
         )}
       </div>

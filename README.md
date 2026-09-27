@@ -4,13 +4,12 @@ Personal site. Fonts, 3D libraries, and models are bundled or served from this r
 
 ## Assets and licences
 
-- **Astronaut model** — [NASA 3D Resources: Astronaut](https://science.nasa.gov/3d-resources/astronaut/) (`public/models/astronaut.glb`, 746 KB glTF with Draco mesh compression and WebP textures). NASA 3D Resources states these files are free to download and use, and without copyright. The catalog credits DigitalSpace Corporation. The source mesh is an unrigged T-pose; the page bends the arms into a resting float and shades the helmet visor as reflective gold. Self-hosted; the page does not request it from nasa.gov at runtime.
-- **Earth limb photograph** — NASA image `iss040e090540`, Expedition 40 ([images.nasa.gov](https://images.nasa.gov/details/iss040e090540)), public domain. Compressed to `public/models/earth-limb.webp`. It is cover-cropped to the panel so the photo is not stretched.
-- **Draco decoder** — bundled from Three.js into the site’s own build, so the compressed mesh decodes without a third-party CDN. Draco is Apache-2.0; Three.js is MIT.
+- **Black hole** — NASA Goddard Space Flight Center / Jeremy Schnittman, Scientific Visualization Studio [ID 13326](https://svs.gsfc.nasa.gov/13326), “NASA Visualization Shows a Black Hole’s Warped World” (2019), public domain. Self-hosted loop: `public/media/black-hole.webm`, from `BH_AccretionDisk_Sim_Stationary_1080.webm` with the audio track removed. Still frame for phones, reduced motion, and while the clip is paused: `public/media/black-hole-still.webp`. Article: [nasa.gov](https://www.nasa.gov/universe/nasa-visualization-shows-a-black-holes-warped-world/).
+- **Spacewalk** — Bruce McCandless II on the Manned Maneuvering Unit during STS-41-B, February 1984. NASA Johnson Space Center photograph [S84-27017](https://images.nasa.gov/details/s84-27017) (7 February 1984; also catalogued as GPN-2000-001156), public domain. The suit is cut out to `public/media/mccandless.webp` and layered, without stretching, over the Earth photograph.
+- **Earth limb** — NASA Johnson image [iss064e005209](https://images.nasa.gov/details/iss064e005209) (20 November 2020), the Earth’s limb above Western Australia from Expedition 64, public domain. Compressed to `public/media/earth-limb.webp` and cover-cropped so the horizon is not stretched.
 - **Instrument Serif** — italic cut, [SIL Open Font License 1.1](https://scripts.sil.org/OFL), self-hosted through `@fontsource/instrument-serif`.
-- **Black hole** — original WebGL shader in `src/space/blackHole.ts` (accretion disk, Doppler beaming, gravitational lensing). No external texture.
 
-On phones and when `prefers-reduced-motion` is set, the spacewalk uses a still poster (`public/models/astronaut-poster.webp`) with drag-to-yaw instead of the WebGL model. The black hole still runs, with fewer ray steps and no continuous disk animation when motion is reduced.
+On phones and when `prefers-reduced-motion` is set, both scenes hold a still photograph: the black-hole frame above, and the same astronaut and Earth layers without drift. Nothing in these scenes is loaded from a CDN at runtime.
 
 The separate study page at `/math1/` is the author’s own HTML file and still loads MathJax and Plotly from their CDNs.
 

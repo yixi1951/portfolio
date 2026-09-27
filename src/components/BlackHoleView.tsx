@@ -1,30 +1,51 @@
 import { useReducedMotion } from 'framer-motion'
 import { useEffect, useRef, useState } from 'react'
 
+function useMobile() {
+  const [mobile, setMobile] = useState(() => window.matchMedia('(max-width: 768px)').matches)
+  useEffect(() => {
+    const query = window.matchMedia('(max-width: 768px)')
+    const onChange = () => setMobile(query.matches)
+    query.addEventListener('change', onChange)
+    return () => query.removeEventListener('change', onChange)
+  }, [])
+  return mobile
+}
+
+function Still() {
+  return (
+    <img
+      src="/media/black-hole-still.webp"
+      alt=""
+      width={1600}
+      height={900}
+      className="absolute inset-0 h-full w-full object-cover"
+      draggable={false}
+    />
+  )
+}
+
 export function BlackHoleView() {
   const hostRef = useRef<HTMLDivElement>(null)
-  const reduce = useReducedMotion()
+  const reduce = Boolean(useReducedMotion())
+  const mobile = useMobile()
+  const light = reduce || mobile
   const [fallback, setFallback] = useState(false)
 
   useEffect(() => {
+    if (light) return
     const host = hostRef.current
     if (!host) return
     let cleanup = () => {}
     let cancelled = false
-    const mobile = window.matchMedia('(max-width: 768px)').matches
-
     const io = new IntersectionObserver(
       (entries) => {
         if (!entries.some((entry) => entry.isIntersecting)) return
         io.disconnect()
-        void import('../space/blackHole')
-          .then(({ mountBlackHole }) => {
+        void import('../space/nasaHole')
+          .then(({ mountNasaHole }) => {
             if (cancelled || !hostRef.current) return
-            cleanup = mountBlackHole(hostRef.current, {
-              reduced: Boolean(reduce),
-              mobile,
-              onError: () => setFallback(true),
-            })
+            cleanup = mountNasaHole(hostRef.current, { onError: () => setFallback(true) })
           })
           .catch(() => {
             if (!cancelled) setFallback(true)
@@ -33,22 +54,18 @@ export function BlackHoleView() {
       { rootMargin: '280px' },
     )
     io.observe(host)
-
     return () => {
       cancelled = true
       io.disconnect()
       cleanup()
     }
-  }, [reduce])
+  }, [light])
+
+  if (light || fallback) return <Still />
 
   return (
-    <div ref={hostRef} className="scene-host absolute inset-0">
-      {fallback && (
-        <div className="absolute left-1/2 top-1/2 h-40 w-40 -translate-x-1/2 -translate-y-1/2">
-          <div className="bh-ring" />
-          <div className="bh-core" />
-        </div>
-      )}
+    <div ref={hostRef} className="scene-host absolute inset-0 touch-none">
+      <Still />
     </div>
   )
 }
