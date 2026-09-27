@@ -261,6 +261,15 @@ a {
   box-shadow: 0 0 24px rgba(0, 0, 0, 0.65);
 }
 
+.scene-host canvas {
+  opacity: 0;
+}
+
+.scene-host[data-ready] canvas {
+  opacity: 1;
+  transition: opacity 0.45s ease;
+}
+
 .moon {
   background:
     radial-gradient(circle at 28% 32%, rgba(255, 255, 255, 0.18), transparent 22%),

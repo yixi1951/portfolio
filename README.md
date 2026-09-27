@@ -1,3 +1,18 @@
+# 杨子烽 / Yang Zifeng
+
+Personal site. Fonts, 3D libraries, and models are bundled or served from this repository. Nothing in the portfolio shell is loaded from a CDN or from Google Fonts.
+
+## Assets and licences
+
+- **Black hole** — NASA Goddard Space Flight Center / Jeremy Schnittman, Scientific Visualization Studio [ID 13326](https://svs.gsfc.nasa.gov/13326), “NASA Visualization Shows a Black Hole’s Warped World” (2019), public domain. Self-hosted loop: `public/media/black-hole.webm`, from `BH_AccretionDisk_Sim_Banner_Stationary.webm` with the audio track removed. That banner cut is the wide stationary view of the same simulation; the 16:9 stationary master has a hard black seam between the front disk and the lower arc, and this file does not. Still frame for phones, reduced motion, and while the clip is paused: `public/media/black-hole-still.webp`. Article: [nasa.gov](https://www.nasa.gov/universe/nasa-visualization-shows-a-black-holes-warped-world/).
+- **Spacewalk** — Bruce McCandless II on the Manned Maneuvering Unit during STS-41-B, February 1984. NASA Johnson Space Center photograph [S84-27017](https://images.nasa.gov/details/s84-27017) (7 February 1984; also catalogued as GPN-2000-001156), public domain. The suit is cut out to `public/media/mccandless.webp` and layered, without stretching, over the Earth photograph.
+- **Earth limb** — NASA Johnson image [iss064e005209](https://images.nasa.gov/details/iss064e005209) (20 November 2020), the Earth’s limb above Western Australia from Expedition 64, public domain. Compressed to `public/media/earth-limb.webp` and cover-cropped so the horizon is not stretched.
+- **Instrument Serif** — italic cut, [SIL Open Font License 1.1](https://scripts.sil.org/OFL), self-hosted through `@fontsource/instrument-serif`.
+
+On phones and when `prefers-reduced-motion` is set, both scenes hold a still photograph: the black-hole frame above, and the same astronaut and Earth layers without drift. Nothing in these scenes is loaded from a CDN at runtime.
+
+The separate study page at `/math1/` is the author’s own HTML file and still loads MathJax and Plotly from their CDNs.
+
 # React + TypeScript + Vite
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.

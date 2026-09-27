@@ -1,6 +1,6 @@
-import { SolarSystem } from './SolarSystem'
-import { FloatingAstronaut } from './FloatingAstronaut'
 import { useI18n } from '../i18n-context'
+import { BlackHoleView } from './BlackHoleView'
+import { SpacewalkView } from './SpacewalkView'
 
 const galaxyPath = (() => {
   const commands: string[] = []
@@ -31,10 +31,10 @@ export function SpaceDivider({ variant = 'orbit' }: { variant?: 'orbit' | 'astro
           : 'Black hole'
 
   return (
-    <div className="px-4 py-3 md:px-6" aria-hidden>
+    <div className="px-4 py-3 md:px-6">
       <div
-        className={`relative mx-auto max-w-6xl overflow-hidden rounded-3xl border border-white/10 bg-[#10131a] ${
-          variant === 'astronaut' ? 'h-80 sm:h-96' : 'h-44 sm:h-52'
+        className={`relative mx-auto max-w-6xl overflow-hidden rounded-3xl border border-white/10 bg-[#07080d] ${
+          variant === 'astronaut' ? 'h-80 sm:h-[28rem]' : variant === 'orbit' ? 'h-72 sm:h-96' : 'h-44 sm:h-52'
         }`}
       >
         <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_50%_120%,rgba(228,224,204,0.12),transparent_55%)]" />
@@ -43,7 +43,7 @@ export function SpaceDivider({ variant = 'orbit' }: { variant?: 'orbit' | 'astro
         </p>
 
         {variant === 'stars' && (
-          <svg viewBox="0 0 420 180" className="absolute inset-0 h-full w-full">
+          <svg viewBox="0 0 420 180" className="absolute inset-0 h-full w-full" aria-hidden>
             <path d={galaxyPath} className="galaxy-arm" />
             <circle cx="210" cy="90" r="3" fill="#f4f1e4" />
             {[40, 90, 150, 280, 330, 370].map((x, index) => (
@@ -52,19 +52,20 @@ export function SpaceDivider({ variant = 'orbit' }: { variant?: 'orbit' | 'astro
           </svg>
         )}
 
-        {variant === 'orbit' && (
-          <div className="absolute left-1/2 top-1/2 h-36 w-36 -translate-x-1/2 -translate-y-1/2 sm:h-40 sm:w-40">
-            <div className="bh-ring" />
-            <div className="bh-core" />
-          </div>
-        )}
+        {variant === 'orbit' && <BlackHoleView />}
 
-        {variant === 'astronaut' && (
-          <div className="absolute inset-0 flex items-center justify-end pr-2 sm:pr-16">
-            <SolarSystem className="h-64 w-64 sm:h-80 sm:w-80">
-              <FloatingAstronaut size="sm" />
-            </SolarSystem>
-          </div>
+        {variant === 'astronaut' && <SpacewalkView />}
+
+        {(variant === 'orbit' || variant === 'astronaut') && (
+          <p className="pointer-events-none absolute bottom-3 right-4 z-10 text-[11px] tracking-wide text-zinc-500">
+            {variant === 'orbit'
+              ? lang === 'zh'
+                ? '拖动倾斜 · 悬停播放'
+                : 'Drag to tilt · hover to play'
+              : lang === 'zh'
+                ? '拖动轻推 · 悬停看说明'
+                : 'Drag to nudge · hover for credit'}
+          </p>
         )}
       </div>
     </div>
