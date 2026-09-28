@@ -8,6 +8,7 @@ import { SpaceDivider } from './components/SpaceDivider'
 import { Flyby } from './components/Flyby'
 import { StarCursor } from './components/StarCursor'
 import { Starfield } from './components/Starfield'
+import { SectionPass } from './components/SectionPass'
 import { useI18n } from './i18n-context'
 
 function App() {
@@ -29,12 +30,20 @@ function App() {
         <main>
           <Hero />
           <SpaceDivider variant="stars" />
-          <About />
-          <GithubProjects />
+          <SectionPass kind="ship">
+            <About />
+          </SectionPass>
+          <SectionPass kind="streaks">
+            <GithubProjects />
+          </SectionPass>
           <SpaceDivider variant="orbit" />
-          <Skills />
+          <SectionPass kind="warp">
+            <Skills />
+          </SectionPass>
           <SpaceDivider variant="astronaut" />
-          <Contact />
+          <SectionPass kind="ship">
+            <Contact />
+          </SectionPass>
         </main>
       </div>
     </>

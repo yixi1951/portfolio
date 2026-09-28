@@ -60,11 +60,11 @@ export function SpaceDivider({ variant = 'orbit' }: { variant?: 'orbit' | 'astro
           <p className="pointer-events-none absolute bottom-3 right-4 z-10 text-[11px] tracking-wide text-zinc-500">
             {variant === 'orbit'
               ? lang === 'zh'
-                ? '拖动倾斜 · 悬停播放'
-                : 'Drag to tilt · hover to play'
+                ? '拖动环绕 · 滚动拉近'
+                : 'Drag to orbit · scroll to zoom'
               : lang === 'zh'
-                ? '拖动轻推 · 悬停看说明'
-                : 'Drag to nudge · hover for credit'}
+                ? '拖动旋转 · 悬停反光'
+                : 'Drag to rotate · hover for gleam'}
           </p>
         )}
       </div>

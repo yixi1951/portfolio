@@ -270,6 +270,94 @@ a {
   transition: opacity 0.45s ease;
 }
 
+.section-pass {
+  position: relative;
+}
+
+.pass-layer {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  overflow: hidden;
+}
+
+.pass-ship {
+  position: absolute;
+  top: 22%;
+  left: 0;
+  width: 132px;
+  height: 38px;
+  animation: pass-ship 1.35s cubic-bezier(0.22, 0.7, 0.2, 1) forwards;
+}
+
+.pass-streak {
+  position: absolute;
+  left: 50%;
+  top: 42%;
+  width: 46%;
+  height: 1.5px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, rgba(244, 241, 228, 0.95), transparent);
+  transform-origin: left center;
+  opacity: 0;
+  animation: streak-flash 0.85s ease-out forwards;
+}
+
+.pass-warp {
+  position: absolute;
+  left: 50%;
+  top: 46%;
+  width: 160px;
+  height: 160px;
+  margin-left: -80px;
+  margin-top: -80px;
+  border-radius: 999px;
+  background: radial-gradient(circle, #05060a 40%, rgba(228, 196, 130, 0.9) 49%, transparent 64%);
+  animation: warp-swallow 1.05s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.pass-warp-lite {
+  animation-duration: 0.7s;
+}
+
+@keyframes pass-ship {
+  from {
+    transform: translate3d(-40%, 0, 0);
+  }
+  to {
+    transform: translate3d(820%, -10px, 0);
+  }
+}
+
+@keyframes streak-flash {
+  0% {
+    opacity: 0;
+    transform: rotate(var(--a)) scaleX(0.08);
+  }
+  28% {
+    opacity: 0.95;
+  }
+  100% {
+    opacity: 0;
+    transform: rotate(var(--a)) scaleX(1);
+  }
+}
+
+@keyframes warp-swallow {
+  0% {
+    opacity: 0.15;
+    transform: scale(0.15);
+  }
+  40% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(16);
+  }
+}
+
 .moon {
   background:
     radial-gradient(circle at 28% 32%, rgba(255, 255, 255, 0.18), transparent 22%),
@@ -452,6 +540,15 @@ a {
   .nebula-c {
     filter: blur(22px);
     opacity: 0.8;
+  }
+
+  .pass-ship {
+    width: 96px;
+    height: 28px;
+  }
+
+  .pass-streak {
+    width: 34%;
   }
 }
 
