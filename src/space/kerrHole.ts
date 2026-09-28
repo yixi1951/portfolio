@@ -1,6 +1,30 @@
 import * as THREE from 'three'
 import { KERR_FRAG, KERR_POST_FRAG, KERR_VERT } from './kerrShaders'
 
+function halton(index: number, base: number) {
+  let f = 1
+  let result = 0
+  let i = index
+  while (i > 0) {
+    f /= base
+    result += f * (i % base)
+    i = Math.floor(i / base)
+  }
+  return result
+}
+
+const MIX_FRAG = `
+  uniform sampler2D tCurrent;
+  uniform sampler2D tHistory;
+  uniform float u_alpha;
+  varying vec2 vUv;
+  void main() {
+    vec3 current = texture2D(tCurrent, vUv).rgb;
+    vec3 history = texture2D(tHistory, vUv).rgb;
+    gl_FragColor = vec4(mix(history, current, u_alpha), 1.0);
+  }
+`
+
 const GM_TILT = (11 * Math.PI) / 180
 
 export function mountKerrHole(
@@ -27,8 +51,8 @@ export function mountKerrHole(
   renderer.outputColorSpace = THREE.LinearSRGBColorSpace
   renderer.toneMapping = THREE.NoToneMapping
 
-  const steps = options.mobile ? 160 : 360
-  const pixelBudget = options.mobile ? 42000 : 150000
+  const steps = options.mobile ? 180 : 440
+  const pixelBudget = options.mobile ? 42000 : 160000
   const fragment = KERR_FRAG.replace('#define MAX_STEPS 1500', `#define MAX_STEPS ${steps}`)
 
   const target = new THREE.WebGLRenderTarget(8, 8, {
@@ -54,10 +78,11 @@ export function mountKerrHole(
       u_cameraRight: { value: new THREE.Vector3() },
       u_spin: { value: 0.62 },
       u_tilt: { value: GM_TILT },
-      u_diskPuffiness: { value: 0.36 },
-      u_turbulence: { value: 0.4 },
-      u_stepScale: { value: options.mobile ? 1.7 : 1.25 },
-      u_starSize: { value: 3.2 },
+      u_diskPuffiness: { value: 0.42 },
+      u_turbulence: { value: 0.22 },
+      u_stepScale: { value: options.mobile ? 1.55 : 1.05 },
+      u_starSize: { value: 1.15 },
+      u_jitter: { value: new THREE.Vector2() },
     },
     depthWrite: false,
     depthTest: false,
@@ -71,11 +96,11 @@ export function mountKerrHole(
     uniforms: {
       tDiffuse: { value: target.texture },
       u_resolution: { value: new THREE.Vector2(8, 8) },
-      u_bloomThreshold: { value: 0.9 },
-      u_bloomStrength: { value: 0.16 },
-      u_flareStrength: { value: 0.05 },
-      u_aberration: { value: 0.15 },
-      u_master: { value: 0.55 },
+      u_bloomThreshold: { value: 1.05 },
+      u_bloomStrength: { value: 0.12 },
+      u_flareStrength: { value: 0 },
+      u_aberration: { value: 0.08 },
+      u_master: { value: 0.62 },
     },
     depthWrite: false,
     depthTest: false,
@@ -83,10 +108,54 @@ export function mountKerrHole(
   const postScene = new THREE.Scene()
   postScene.add(new THREE.Mesh(quad, postMaterial))
 
-  const camera = new THREE.PerspectiveCamera(36, 1, 0.1, 200)
-  let radius = 28
-  let polar = 1.32
-  let azimuth = 0.85
+  const history = new THREE.WebGLRenderTarget(8, 8, {
+    minFilter: THREE.LinearFilter,
+    magFilter: THREE.LinearFilter,
+    format: THREE.RGBAFormat,
+    type: THREE.HalfFloatType,
+    depthBuffer: false,
+  })
+  const blended = new THREE.WebGLRenderTarget(8, 8, {
+    minFilter: THREE.LinearFilter,
+    magFilter: THREE.LinearFilter,
+    format: THREE.RGBAFormat,
+    type: THREE.HalfFloatType,
+    depthBuffer: false,
+  })
+  const mixMaterial = new THREE.ShaderMaterial({
+    vertexShader: KERR_VERT,
+    fragmentShader: MIX_FRAG,
+    uniforms: {
+      tCurrent: { value: target.texture },
+      tHistory: { value: history.texture },
+      u_alpha: { value: 1 },
+    },
+    depthWrite: false,
+    depthTest: false,
+  })
+  const mixScene = new THREE.Scene()
+  mixScene.add(new THREE.Mesh(quad, mixMaterial))
+  const copyMaterial = new THREE.ShaderMaterial({
+    vertexShader: KERR_VERT,
+    fragmentShader: `
+      uniform sampler2D tDiffuse;
+      varying vec2 vUv;
+      void main() {
+        gl_FragColor = vec4(texture2D(tDiffuse, vUv).rgb, 1.0);
+      }
+    `,
+    uniforms: { tDiffuse: { value: blended.texture } },
+    depthWrite: false,
+    depthTest: false,
+  })
+  const copyScene = new THREE.Scene()
+  copyScene.add(new THREE.Mesh(quad, copyMaterial))
+  postMaterial.uniforms.tDiffuse.value = blended.texture
+
+  const camera = new THREE.PerspectiveCamera(32, 1, 0.1, 200)
+  let radius = 19.5
+  let polar = 1.26
+  let azimuth = 0.95
   let polarV = 0
   let azimuthV = 0
   let dragging = false
@@ -98,11 +167,12 @@ export function mountKerrHole(
   let stopped = false
   let visible = true
   let pixelBudgetLive = pixelBudget
-  let stepScale = options.mobile ? 1.7 : 1.25
+  let stepScale = options.mobile ? 1.55 : 1.05
   let slowFrames = 0
   let warmed = 0
   const pointers = new Map<number, { x: number; y: number }>()
   let pinchDistance = 0
+  let sampleIndex = 0
 
   const place = () => {
     const span = Math.sin(polar)
@@ -127,6 +197,9 @@ export function mountKerrHole(
     canvas.style.width = '100%'
     canvas.style.height = '100%'
     target.setSize(width, height)
+    history.setSize(width, height)
+    blended.setSize(width, height)
+    mixMaterial.uniforms.u_alpha.value = 1
     material.uniforms.u_resolution.value.set(width, height)
     postMaterial.uniforms.u_resolution.value.set(width, height)
     camera.aspect = aspect
@@ -151,8 +224,17 @@ export function mountKerrHole(
     material.uniforms.u_cameraRight.value.set(basis[0], basis[1], basis[2]).normalize()
     material.uniforms.u_cameraUp.value.set(basis[4], basis[5], basis[6]).normalize()
     material.uniforms.u_cameraDir.value.set(-basis[8], -basis[9], -basis[10]).normalize()
+    sampleIndex += 1
+    const sample = (sampleIndex % 8) + 1
+    material.uniforms.u_jitter.value.set(halton(sample, 2) - 0.5, halton(sample, 3) - 0.5)
+    const moving = dragging || Math.abs(azimuthV) > 0.0004 || Math.abs(polarV) > 0.0004
+    mixMaterial.uniforms.u_alpha.value = moving || warmed < 2 ? 1 : 0.28
     renderer.setRenderTarget(target)
     renderer.render(scene, renderCamera)
+    renderer.setRenderTarget(blended)
+    renderer.render(mixScene, renderCamera)
+    renderer.setRenderTarget(history)
+    renderer.render(copyScene, renderCamera)
     renderer.setRenderTarget(null)
     renderer.render(postScene, renderCamera)
     if (!host.dataset.ready) host.dataset.ready = 'true'
@@ -197,7 +279,7 @@ export function mountKerrHole(
     const dy = pts[0].y - pts[1].y
     return Math.hypot(dx, dy)
   }
-  const clampRadius = (value: number) => Math.min(78, Math.max(16, value))
+  const clampRadius = (value: number) => Math.min(70, Math.max(14, value))
 
   const onDown = (event: PointerEvent) => {
     pointers.set(event.pointerId, { x: event.clientX, y: event.clientY })
@@ -269,7 +351,11 @@ export function mountKerrHole(
     quad.dispose()
     material.dispose()
     postMaterial.dispose()
+    mixMaterial.dispose()
+    copyMaterial.dispose()
     target.dispose()
+    history.dispose()
+    blended.dispose()
     renderer.dispose()
     canvas.remove()
     delete host.dataset.ready

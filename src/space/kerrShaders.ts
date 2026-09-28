@@ -25,10 +25,12 @@ export const KERR_FRAG = `
         uniform float u_turbulence;
         uniform float u_stepScale;
         uniform float u_starSize;
+        uniform vec2 u_jitter;
 
         #define MAX_STEPS 1500
         #define BASE_STEP_SIZE 0.05
         #define GM 0.5
+        #define DISK_OUTER 10.5
 
         mat3 rotZ(float angle) {
             float s = sin(angle);
@@ -74,27 +76,40 @@ export const KERR_FRAG = `
             return fbm_high(p + warp * u_turbulence);
         }
 
+        vec3 starLayer(vec3 rd, float scale, float cutoff, float radius, float gain) {
+            vec3 p = rd * scale;
+            vec3 ip = floor(p);
+            float h = hash13(ip);
+            if (h < cutoff) return vec3(0.0);
+            vec3 fp = fract(p);
+            vec3 offset = vec3(hash13(ip + 1.3), hash13(ip + 2.7), hash13(ip + 5.1)) * 0.55 + 0.22;
+            float d = length(fp - offset);
+            // Keep the star well inside its cell so the hash lattice never reads as a grid.
+            float core = smoothstep(radius, radius * 0.15, d);
+            core *= core;
+            float temp = hash13(ip + 8.2);
+            vec3 tint = mix(vec3(0.5, 0.72, 1.0), vec3(1.0, 0.74, 0.4), temp);
+            tint = mix(tint, vec3(1.0, 0.4, 0.28), smoothstep(0.72, 1.0, temp));
+            float mag = mix(0.35, 1.7, hash13(ip + 3.3));
+            return tint * core * mag * gain;
+        }
+
         vec3 getStars(vec3 rd) {
             vec3 col = vec3(0.0);
-            vec3 p1 = rd * 280.0;
-            vec3 ip1 = floor(p1);
-            if (hash13(ip1) > 0.986) {
-                vec3 fp1 = fract(p1);
-                vec3 offset = vec3(hash13(ip1 + 1.1), hash13(ip1 + 2.2), hash13(ip1 + 3.3)) * 0.6 + 0.2;
-                float r1 = 0.12 * u_starSize;
-                col += vec3(smoothstep(r1, 0.0, length(fp1 - offset)) * (0.3 + 0.7 * hash13(ip1 + 4.4)));
-            }
-            vec3 p2 = rd * 110.0;
-            vec3 ip2 = floor(p2);
-            if (hash13(ip2) > 0.972) {
-                vec3 fp2 = fract(p2);
-                vec3 offset = vec3(hash13(ip2 + 5.5), hash13(ip2 + 6.6), hash13(ip2 + 7.7)) * 0.6 + 0.2;
-                float r2 = 0.18 * u_starSize;
-                float star = smoothstep(r2, 0.0, length(fp2 - offset));
-                vec3 tint = mix(vec3(0.5, 0.8, 1.0), vec3(1.0, 0.6, 0.4), hash13(ip2 + 8.8));
-                col += vec3(star * (1.5 + 4.0 * hash13(ip2 + 9.9))) * tint;
-            }
-            return col * 3.2;
+            float size = clamp(u_starSize, 0.4, 2.2);
+            col += starLayer(rd, 70.0, 0.9965, 0.055 * size, 1.15);
+            col += starLayer(rd, 160.0, 0.9982, 0.034 * size, 1.7);
+            col += starLayer(rd, 340.0, 0.99915, 0.02 * size, 2.3);
+
+            // Faint, smooth Milky Way. Low-frequency only, so lensing bends a band instead of a noise grid.
+            vec3 pole = normalize(vec3(0.22, 0.9, 0.16));
+            float lat = dot(rd, pole);
+            float band = exp(-lat * lat * 22.0);
+            float dust = noise(rd * 2.4 + vec3(2.0, 0.4, 1.0));
+            float lane = smoothstep(0.28, 0.72, noise(rd * 1.6 + vec3(5.0, 1.2, 0.3)));
+            vec3 milk = vec3(0.62, 0.68, 0.92) * band * (0.05 + 0.16 * dust) * (0.45 + 0.55 * lane);
+            col += milk;
+            return col;
         }
 
         vec3 blackbody(float temp) {
@@ -134,7 +149,8 @@ export const KERR_FRAG = `
         }
 
         void main() {
-            vec2 uv = (gl_FragCoord.xy - 0.5 * u_resolution.xy) / u_resolution.y;
+            vec2 frag = gl_FragCoord.xy + u_jitter;
+            vec2 uv = (frag - 0.5 * u_resolution.xy) / u_resolution.y;
 
             vec3 ro = u_cameraPos;
             vec3 cw = normalize(u_cameraDir);
@@ -147,7 +163,8 @@ export const KERR_FRAG = `
             rd = tiltMat * rd;
             vec3 p = ro;
 
-            float dither = hash13(vec3(gl_FragCoord.xy, u_time));
+            // Stable per-sample jitter. u_jitter walks a Halton sequence so TAA averages the bands out.
+            float dither = hash13(vec3(gl_FragCoord.xy, u_jitter.x * 19.0 + u_jitter.y * 7.0));
             p += rd * dither * BASE_STEP_SIZE;
 
             vec3 col = vec3(0.0);
@@ -169,12 +186,12 @@ export const KERR_FRAG = `
                 if (r > 100.0) break;
 
                 // Volumetrically Thick Disk Profile (Puffed up near ISCO)
-                float profileThickness = 0.1 + u_diskPuffiness * 0.4 * exp(-pow(r - r_isco - 1.0, 2.0) * 0.5);
-                bool inDisk = abs(p.y) < profileThickness && r > r_plus && r < 9.0;
+                float profileThickness = 0.14 + u_diskPuffiness * 0.5 * exp(-pow(r - r_isco - 1.0, 2.0) * 0.35);
+                bool inDisk = abs(p.y) < profileThickness && r > r_plus && r < DISK_OUTER;
                 float currentStep;
 
                 if (inDisk) {
-                    currentStep = 0.02 * u_stepScale;
+                    currentStep = 0.016 * u_stepScale;
                 } else {
                     // Refined Lensing Stepping: Finer steps in the photon sphere (r = ~1.5 to 3.0)
                     float distToPhotonSphere = abs(r - 2.0);
@@ -189,7 +206,7 @@ export const KERR_FRAG = `
 
                 if (inDisk) {
                     float verticalFade = smoothstep(profileThickness, 0.0, abs(p.y));
-                    float radialFade = pow(3.0 / r, 1.0) * smoothstep(9.0, 5.5, r);
+                    float radialFade = pow(3.0 / r, 0.85) * smoothstep(DISK_OUTER, 6.2, r);
                     float fadeProduct = verticalFade * radialFade;
 
                     if (fadeProduct > 0.001) {
@@ -197,11 +214,13 @@ export const KERR_FRAG = `
                         float twistAngle = -u_time * (3.0 / r) * timeDilation;
                         mat2 twistRot = mat2(cos(twistAngle), -sin(twistAngle), sin(twistAngle), cos(twistAngle));
                         vec2 swirledXZ = twistRot * p.xz;
-                        vec3 pRot = vec3(swirledXZ.x, p.y * 3.0, swirledXZ.y);
+                        vec3 pRot = vec3(swirledXZ.x, p.y * 2.2, swirledXZ.y);
 
-                        // Domain-warped turbulent noise for the gas
-                        float n = pow(fbm_warped(pRot * 2.0), 2.5);
-                        float density = n * fadeProduct * 12.0;
+                        // Large-scale spiral plus low-frequency turbulence. High powers of fbm read as grain.
+                        float spiral = 0.62 + 0.38 * sin(4.5 * atan(p.z, p.x) - 1.15 * r + twistAngle * 0.2);
+                        float n = fbm_warped(pRot * 0.62);
+                        n = smoothstep(0.18, 0.82, n);
+                        float density = (0.42 + 0.58 * n) * spiral * fadeProduct * 5.5;
 
                         if (r < r_isco) density *= smoothstep(r_plus, r_isco, r) * 0.15;
 
@@ -214,7 +233,7 @@ export const KERR_FRAG = `
                             float gravRedshift = sqrt(max(0.05, 1.0 - r_plus / r));
 
                             float D = dopplerShift * gravRedshift;
-                            float beaming = pow(D, 3.0);
+                            float beaming = pow(D, 4.0);
                             float alpha = 1.0 - exp(-density * currentStep * 2.0);
 
                             float baseTemp = 6500.0 * pow(3.0 / max(r, 1.0), 1.5);
@@ -228,7 +247,7 @@ export const KERR_FRAG = `
                 }
 
                 float dt = currentStep;
-                if (r > 9.0) {
+                if (r > DISK_OUTER) {
                     p += rd * dt;
                 } else {
                     vec3 k1_p = rd;
@@ -328,21 +347,8 @@ export const KERR_POST_FRAG = `
             }
             bloom /= max(weightSum, 0.001);
 
-            // --- 3. Stretching the Light (Anamorphic Lens Flare) ---
+            // The horizontal anamorphic sweep painted scan lines across the star field, so it stays off.
             vec3 flare = vec3(0.0);
-            float flareWeightSum = 0.0;
-            float flareSpread = 2.5;
-
-            // Dense, continuous horizontal sweep to eliminate dashed-line artifacts
-            for(int x = -25; x <= 25; x++) {
-                vec2 offset = vec2(float(x) * texel.x * flareSpread, 0.0);
-                vec3 sampleCol = texture2D(tDiffuse, uv + offset).rgb * u_master;
-                float weight = exp(-abs(float(x)) * 0.1);
-                flare += getBright(sampleCol, u_bloomThreshold) * weight;
-                flareWeightSum += weight;
-            }
-            flare /= max(flareWeightSum, 0.001);
-            flare *= vec3(0.2, 0.5, 1.0); // Sci-fi cyan/blue tint
 
             // --- Composite the Layers ---
             // u_master is exposure. The ray marcher writes raw HDR, so scale it before ACES.
