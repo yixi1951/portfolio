@@ -1,0 +1,12 @@
+Planet maps for the Sun, Mercury, Venus, Earth (day, night, clouds, and ocean specular), Mars, Jupiter, Saturn, and Saturn’s rings are from Solar System Scope. The Milky Way sky is Solar System Scope’s 8k stars_milky_way map, downscaled to 4096×2048 and toned darker so the band stays subtle. Earth day, night, clouds, and specular are the 2k maps, recompressed to WebP.
+
+https://www.solarsystemscope.com/textures/
+Creative Commons Attribution 4.0 International (CC BY 4.0)
+https://creativecommons.org/licenses/by/4.0/
+
+The Moon color map is NASA / GSFC / Arizona State University, Lunar Reconnaissance Orbiter Wide Angle Camera (Scientific Visualization Studio #4720).
+
+https://svs.gsfc.nasa.gov/4720
+United States government work, public domain. Please credit NASA.
+
+Textures are resized and compressed to WebP for this site. They are self-hosted; the page does not request them from a CDN.

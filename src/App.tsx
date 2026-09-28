@@ -1,13 +1,10 @@
 import { About } from './components/About'
 import { Contact } from './components/Contact'
+import { CosmosBackdrop } from './components/CosmosBackdrop'
 import { GithubProjects } from './components/GithubProjects'
 import { Hero } from './components/Hero'
 import { SiteHeader } from './components/SiteHeader'
 import { Skills } from './components/Skills'
-import { SpaceDivider } from './components/SpaceDivider'
-import { Flyby } from './components/Flyby'
-import { StarCursor } from './components/StarCursor'
-import { Starfield } from './components/Starfield'
 import { useI18n } from './i18n-context'
 
 function App() {
@@ -15,25 +12,17 @@ function App() {
 
   return (
     <>
-      <Starfield />
-      <StarCursor />
-      <Flyby />
-      <a
-        href="#top"
-        className="skip-link"
-      >
+      <CosmosBackdrop />
+      <a href="#top" className="skip-link">
         {lang === 'zh' ? '跳到内容' : 'Skip to content'}
       </a>
-      <div className="relative z-10">
+      <div className="pointer-events-none relative z-10">
         <SiteHeader />
-        <main>
+        <main className="pointer-events-none">
           <Hero />
-          <SpaceDivider variant="stars" />
           <About />
           <GithubProjects />
-          <SpaceDivider variant="orbit" />
           <Skills />
-          <SpaceDivider variant="astronaut" />
           <Contact />
         </main>
       </div>

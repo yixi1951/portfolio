@@ -18,8 +18,7 @@ html {
 
 body {
   margin: 0;
-  overflow-x: hidden;
-  background-color: #07080d;
+  background-color: #02030a;
   color: #f3f0e2;
   font-family: 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Noto Sans SC', 'Microsoft YaHei',
     system-ui, sans-serif;
@@ -152,8 +151,9 @@ a {
   top: 16vh;
   left: 0;
   width: 168px;
-  height: 56px;
+  height: 48px;
   opacity: 0;
+  filter: drop-shadow(0 0 12px rgba(255, 160, 80, 0.4));
   animation: flyby 7.5s linear infinite;
   will-change: transform;
 }
@@ -261,6 +261,39 @@ a {
   box-shadow: 0 0 24px rgba(0, 0, 0, 0.65);
 }
 
+.stage-copy {
+  width: min(100%, 72rem);
+  margin-inline: auto;
+}
+
+@media (min-width: 1100px) {
+  .stage-copy {
+    width: min(46rem, 56vw);
+    margin-left: clamp(1.25rem, 4vw, 3rem);
+    margin-right: auto;
+  }
+}
+
+.glass-panel {
+  background: rgba(8, 10, 16, 0.86);
+  pointer-events: auto;
+}
+
+.cosmos-host {
+  isolation: isolate;
+  transform: translateZ(0);
+}
+
+.cosmos-host canvas {
+  opacity: 0;
+  touch-action: pan-y;
+}
+
+.cosmos-host[data-ready] canvas {
+  opacity: 1;
+  transition: opacity 0.7s ease;
+}
+
 .scene-host canvas {
   opacity: 0;
 }
@@ -268,6 +301,95 @@ a {
 .scene-host[data-ready] canvas {
   opacity: 1;
   transition: opacity 0.45s ease;
+}
+
+.section-pass {
+  position: relative;
+}
+
+.pass-layer {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  overflow: hidden;
+}
+
+.pass-ship {
+  position: absolute;
+  top: 18%;
+  left: 0;
+  width: 148px;
+  height: 46px;
+  filter: drop-shadow(0 0 10px rgba(255, 176, 96, 0.45));
+  animation: pass-ship 1.35s cubic-bezier(0.22, 0.7, 0.2, 1) forwards;
+}
+
+.pass-streak {
+  position: absolute;
+  left: 50%;
+  top: 42%;
+  width: 46%;
+  height: 1.5px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, rgba(244, 241, 228, 0.95), transparent);
+  transform-origin: left center;
+  opacity: 0;
+  animation: streak-flash 0.85s ease-out forwards;
+}
+
+.pass-warp {
+  position: absolute;
+  left: 50%;
+  top: 46%;
+  width: 160px;
+  height: 160px;
+  margin-left: -80px;
+  margin-top: -80px;
+  border-radius: 999px;
+  background: radial-gradient(circle, #05060a 40%, rgba(228, 196, 130, 0.9) 49%, transparent 64%);
+  animation: warp-swallow 1.05s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+.pass-warp-lite {
+  animation-duration: 0.7s;
+}
+
+@keyframes pass-ship {
+  from {
+    transform: translate3d(-40%, 0, 0);
+  }
+  to {
+    transform: translate3d(820%, -10px, 0);
+  }
+}
+
+@keyframes streak-flash {
+  0% {
+    opacity: 0;
+    transform: rotate(var(--a)) scaleX(0.08);
+  }
+  28% {
+    opacity: 0.95;
+  }
+  100% {
+    opacity: 0;
+    transform: rotate(var(--a)) scaleX(1);
+  }
+}
+
+@keyframes warp-swallow {
+  0% {
+    opacity: 0.15;
+    transform: scale(0.15);
+  }
+  40% {
+    opacity: 0.9;
+  }
+  100% {
+    opacity: 0;
+    transform: scale(16);
+  }
 }
 
 .moon {
@@ -452,6 +574,15 @@ a {
   .nebula-c {
     filter: blur(22px);
     opacity: 0.8;
+  }
+
+  .pass-ship {
+    width: 96px;
+    height: 28px;
+  }
+
+  .pass-streak {
+    width: 34%;
   }
 }
 

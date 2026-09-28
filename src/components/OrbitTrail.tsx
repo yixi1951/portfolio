@@ -25,7 +25,7 @@ export function OrbitTrail() {
   const path = points.map((point, index) => `${index === 0 ? 'M' : 'L'} ${point.x} ${point.y}`).join(' ')
 
   return (
-    <div className="rounded-3xl border border-white/10 bg-[#10131a] p-6 sm:p-7 lg:col-span-12">
+    <div className="rounded-3xl border border-white/10 glass-panel p-6 sm:p-7 lg:col-span-12">
       <p className="text-xs font-medium uppercase tracking-[0.22em] text-zinc-400">
         {lang === 'zh' ? '轨迹' : 'Trajectory'}
       </p>
