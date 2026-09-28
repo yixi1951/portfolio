@@ -6,8 +6,8 @@ export function Skills() {
   const { lang } = useI18n()
 
   return (
-    <section id="skills" className="scroll-mt-24 px-4 py-4 md:px-6">
-      <div className="mx-auto max-w-6xl rounded-3xl border border-white/10 bg-[#10131a] p-6 sm:p-8 md:p-10">
+    <section id="skills" className="pointer-events-none scroll-mt-24 px-4 py-10 md:px-6 md:py-20">
+      <div className="mx-auto max-w-6xl rounded-3xl border border-white/10 glass-panel p-6 sm:p-8 md:p-10">
         <p className="text-xs font-medium uppercase tracking-[0.22em] text-zinc-400">
           {lang === 'zh' ? '技能' : 'Skills'}
         </p>

@@ -20,7 +20,7 @@ export function SiteHeader() {
   const { lang, toggleLang } = useI18n()
 
   return (
-    <header className="sticky top-0 z-50 border-b border-white/10 bg-[#07080d]/80 backdrop-blur-xl">
+    <header className="pointer-events-auto sticky top-0 z-50 border-b border-white/10 bg-[#07080d]/80 backdrop-blur-xl">
       <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-4 gap-y-2 px-4 py-3 md:px-6">
         <a href="#top" className="flex min-w-0 items-baseline gap-2">
           <span className="text-sm font-medium tracking-wide text-[#f3f0e2]">{profile.name}</span>
