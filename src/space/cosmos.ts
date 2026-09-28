@@ -123,8 +123,11 @@ const BODIES: BodySpec[] = [
   { id: 'earth', map: '/textures/earth-day.webp', radius: 0.62, distance: 1, offset: 0, spin: 0.18, tilt: 0.41, roughness: 0.72 },
   { id: 'mars', map: '/textures/mars.webp', radius: 0.32, distance: 1, offset: 0, spin: 0.16, tilt: 0.44, roughness: 0.96, atmo: { color: 0xd07a58, scale: 1.02, strength: 0.16 } },
   { id: 'jupiter', map: '/textures/jupiter.webp', radius: 1.05, distance: 1, offset: 0, spin: 0.32, tilt: 0.05, roughness: 0.94, atmo: { color: 0xe6d2b4, scale: 1.015, strength: 0.1 } },
-  { id: 'saturn', map: '/textures/saturn.webp', radius: 0.88, distance: 1, offset: 0, spin: 0.28, tilt: 0.47, roughness: 0.94, rings: true, atmo: { color: 0xf0ddb8, scale: 1.015, strength: 0.08 } },
+  { id: 'saturn', map: '/textures/saturn.webp', radius: 0.88, distance: 1, offset: 0, spin: 0.28, tilt: 0.72, roughness: 0.94, rings: true, atmo: { color: 0xf0ddb8, scale: 1.015, strength: 0.08 } },
 ]
+
+// Just off the left edge of the hero frame, so the glow peeks in beside the name.
+const SUN_POS = new THREE.Vector3(-0.65, 0.35, -0.25)
 
 const PLACED: Record<string, [number, number, number]> = {
   mercury: [-18, 6, 55],
@@ -318,12 +321,16 @@ export function mountCosmos(
   disposables.push({ geometry: stars.geometry as THREE.BufferGeometry, material: stars.material as THREE.Material })
 
   const sunGlow = glowSprite()
-  if (sunGlow) scene.add(sunGlow)
+  if (sunGlow) {
+    sunGlow.position.copy(SUN_POS)
+    scene.add(sunGlow)
+  }
   const sunMap = loadMap('/textures/sun.webp', THREE.SRGBColorSpace)
   const sun = new THREE.Mesh(
     new THREE.SphereGeometry(1.15, options.mobile ? 32 : 48, options.mobile ? 24 : 36),
     new THREE.MeshBasicMaterial({ map: sunMap }),
   )
+  sun.position.copy(SUN_POS)
   sun.userData.id = 'sun'
   scene.add(sun)
 
@@ -344,6 +351,10 @@ export function mountCosmos(
     clouds?: THREE.Mesh
   }
   const runtime: Runtime[] = []
+  let ringFrame: {
+    tilt: THREE.Group
+    shadow: { uAxis: { value: THREE.Vector3 }; uCenter: { value: THREE.Vector3 } }
+  } | null = null
   let layer = 1
   let earthLayer = 1
   const segments = options.mobile ? 36 : 64
@@ -368,8 +379,16 @@ export function mountCosmos(
   for (const spec of BODIES) {
     const pivot = new THREE.Group()
     const spin = new THREE.Group()
-    spin.rotation.z = spec.tilt
-    pivot.add(spin)
+    // Saturn's tilt stays on a parent so the daily spin does not roll the rings edge-on.
+    const tilt = new THREE.Group()
+    if (spec.rings) {
+      tilt.rotation.z = spec.tilt
+      pivot.add(tilt)
+      tilt.add(spin)
+    } else {
+      spin.rotation.z = spec.tilt
+      pivot.add(spin)
+    }
     scene.add(pivot)
 
     const light = new THREE.DirectionalLight(0xfff2e0, 1.55)
@@ -471,8 +490,66 @@ export function mountCosmos(
       })
       const ring = new THREE.Mesh(ringGeo, ringMat)
       ring.rotation.x = Math.PI / 2
+      ring.renderOrder = 2
       ring.layers.set(layer)
       spin.add(ring)
+      const shadow = {
+        uSunPos: { value: SUN_POS.clone() },
+        uAxis: { value: new THREE.Vector3(0, 1, 0) },
+        uCenter: { value: new THREE.Vector3() },
+        uRingMap: { value: ringTex },
+        uInner: { value: inner },
+        uOuter: { value: outer },
+      }
+      ;(material as THREE.MeshStandardMaterial).onBeforeCompile = (shader) => {
+        shader.uniforms.uSunPos = shadow.uSunPos
+        shader.uniforms.uAxis = shadow.uAxis
+        shader.uniforms.uCenter = shadow.uCenter
+        shader.uniforms.uRingMap = shadow.uRingMap
+        shader.uniforms.uInner = shadow.uInner
+        shader.uniforms.uOuter = shadow.uOuter
+        shader.vertexShader = shader.vertexShader
+          .replace('#include <common>', '#include <common>\nvarying vec3 vSaturnWorld;')
+          .replace(
+            '#include <worldpos_vertex>',
+            '#include <worldpos_vertex>\nvSaturnWorld = (modelMatrix * vec4(transformed, 1.0)).xyz;',
+          )
+        shader.fragmentShader = shader.fragmentShader
+          .replace(
+            '#include <common>',
+            `#include <common>
+varying vec3 vSaturnWorld;
+uniform vec3 uSunPos;
+uniform vec3 uAxis;
+uniform vec3 uCenter;
+uniform sampler2D uRingMap;
+uniform float uInner;
+uniform float uOuter;`,
+          )
+          .replace(
+            '#include <opaque_fragment>',
+            `vec3 sunDir = normalize(uSunPos - vSaturnWorld);
+vec3 axis = normalize(uAxis);
+vec3 fromCenter = vSaturnWorld - uCenter;
+float denom = dot(sunDir, axis);
+float shade = 1.0;
+if (abs(denom) > 0.0001) {
+  float travel = -dot(fromCenter, axis) / denom;
+  if (travel > 0.0) {
+    vec3 hit = fromCenter + sunDir * travel;
+    float radial = length(hit - axis * dot(hit, axis));
+    if (radial > uInner && radial < uOuter) {
+      float ringU = (radial - uInner) / (uOuter - uInner);
+      float ringAlpha = texture2D(uRingMap, vec2(ringU, 0.5)).a;
+      shade = mix(1.0, 0.28, ringAlpha);
+    }
+  }
+}
+outgoingLight *= shade;
+#include <opaque_fragment>`,
+          )
+      }
+      ringFrame = { tilt, shadow }
       disposables.push({ geometry: ringGeo, material: ringMat, texture: ringTex })
     }
 
@@ -533,8 +610,8 @@ export function mountCosmos(
       const spot = PLACED[body.id]
       body.pivot.position.set(spot[0], spot[1], spot[2])
       if (!options.reduced) body.spin.rotation.y = time * body.spec.spin
-      body.light.position.set(0, 0.15, 0)
-      if (body.sunUniform) body.sunUniform.value.copy(body.pivot.position).negate().normalize()
+      body.light.position.copy(SUN_POS)
+      if (body.sunUniform) body.sunUniform.value.copy(SUN_POS).sub(body.pivot.position).normalize()
       if (body.clouds && !options.reduced) body.clouds.rotation.y = time * 0.015
     }
     if (moonMesh) {
@@ -621,6 +698,10 @@ export function mountCosmos(
     const delta = Math.min(0.05, Math.max(0.001, clock.getDelta()))
     placeBodies(time)
     scene.updateMatrixWorld(true)
+    if (ringFrame) {
+      ringFrame.shadow.uAxis.value.set(0, 1, 0).transformDirection(ringFrame.tilt.matrixWorld)
+      ringFrame.shadow.uCenter.value.setFromMatrixPosition(ringFrame.tilt.matrixWorld)
+    }
     frameCamera(delta)
     renderer.render(scene, camera)
     const cost = performance.now() - now
