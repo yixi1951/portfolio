@@ -141,14 +141,18 @@ const PLACED: Record<string, [number, number, number]> = {
 // Each scroll stop frames one planet in the open lane on the right.
 // The in-between poses only pitch, so the planet leaves through the top
 // of that lane before the camera yaws toward the next one.
-const SHOTS: { t: number; pos: [number, number, number]; look: [number, number, number]; ndc: number }[] = [
+const SHOTS: { t: number; pos: [number, number, number]; look: [number, number, number]; ndc: number; ndcY?: number }[] = [
   { t: 0, pos: [0.8, 0.35, 4.85], look: [4.15, 0.15, 0.12], ndc: 0.56 },
   { t: 0.08, pos: [0.8, -1.25, 4.85], look: [4.15, -2.65, 0.12], ndc: 0.56 },
   { t: 0.18, pos: [5.22, -4.41, 4.74], look: [8.4, -4.6, 0.25], ndc: 0.58 },
   { t: 0.36, pos: [5.22, -6.61, 4.74], look: [8.4, -8.0, 0.25], ndc: 0.58 },
   { t: 0.48, pos: [7.87, -8.87, 7.85], look: [13.4, -9.2, 0.05], ndc: 0.56 },
   { t: 0.72, pos: [7.87, -11.47, 7.85], look: [13.4, -13.0, 0.05], ndc: 0.56 },
-  { t: 1, pos: [13.0, -13.77, 10.52], look: [20.2, -14.2, 0.35], ndc: 0.6 },
+  // Contact is on screen from about 0.91 to the bottom. Arrive before that
+  // and hold, or Saturn is still sliding in from the right at the stop.
+  // Pulled back along the same view ray so the open rings fit the lane.
+  { t: 0.88, pos: [11.42, -13.68, 12.75], look: [20.2, -14.2, 0.35], ndc: 0.56, ndcY: 0.1 },
+  { t: 1, pos: [11.42, -13.68, 12.75], look: [20.2, -14.2, 0.35], ndc: 0.56, ndcY: 0.1 },
 ]
 
 const STAR_VERT = `
@@ -641,7 +645,10 @@ outgoingLight *= shade;
     posePos.fromArray(SHOTS[index].pos).lerp(new THREE.Vector3().fromArray(SHOTS[index + 1].pos), blend)
     poseLook.fromArray(SHOTS[index].look).lerp(new THREE.Vector3().fromArray(SHOTS[index + 1].look), blend)
     const ndcX = (SHOTS[index].ndc + (SHOTS[index + 1].ndc - SHOTS[index].ndc) * blend) * lane
-    shiftLook(posePos, poseLook, ndcX, options.mobile ? 0.16 : 0, camera.fov, camera.aspect)
+    const fromY = SHOTS[index].ndcY ?? 0
+    const toY = SHOTS[index + 1].ndcY ?? 0
+    const ndcY = fromY + (toY - fromY) * blend
+    shiftLook(posePos, poseLook, ndcX, options.mobile ? 0.16 : ndcY, camera.fov, camera.aspect)
 
     desiredPos.copy(posePos)
     desiredLook.copy(poseLook)
