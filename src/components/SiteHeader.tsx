@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react'
 import { profile } from '../data/profile'
 import { useI18n } from '../i18n-context'
 
@@ -18,10 +19,26 @@ const links = {
 
 export function SiteHeader() {
   const { lang, toggleLang } = useI18n()
+  const [scrolled, setScrolled] = useState(false)
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 8)
+    onScroll()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [])
 
   return (
-    <header className="pointer-events-none sticky top-0 z-50 px-4 pt-3 md:px-6">
-      <div className="stage-copy pointer-events-auto flex flex-wrap items-center justify-between gap-x-3 gap-y-2 rounded-2xl border border-white/10 bg-[#07080d]/92 px-3 py-2">
+    <header
+      className={`pointer-events-none sticky top-0 z-50 ${scrolled ? 'border-b border-white/10 bg-[#05060c]' : 'px-4 pt-3 md:px-6'}`}
+    >
+      <div
+        className={
+          scrolled
+            ? 'pointer-events-auto mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-x-3 gap-y-2 px-4 py-3 md:px-6'
+            : 'stage-copy pointer-events-auto flex flex-wrap items-center justify-between gap-x-3 gap-y-2 rounded-2xl border border-white/10 bg-[#07080d] px-3 py-2'
+        }
+      >
         <a href="#top" className="flex min-w-0 items-baseline gap-2">
           <span className="text-sm font-medium tracking-wide text-[#f3f0e2]">{profile.name}</span>
           <span className="hidden text-xs text-zinc-400 sm:inline">{profile.nameEn}</span>

@@ -17,29 +17,6 @@ const NAMES: Record<string, Record<Lang, string>> = {
   saturn: { zh: '土星', en: 'Saturn' },
 }
 
-const SKY_VERT = `
-  varying vec3 vDir;
-  void main() {
-    vec4 world = modelMatrix * vec4(position, 1.0);
-    vDir = world.xyz - cameraPosition;
-    gl_Position = projectionMatrix * viewMatrix * world;
-  }
-`
-
-const SKY_FRAG = `
-  uniform sampler2D uMap;
-  uniform float uGain;
-  varying vec3 vDir;
-  void main() {
-    vec3 dir = normalize(vDir);
-    float u = atan(dir.z, dir.x) * 0.15915494 + 0.5;
-    float v = asin(clamp(dir.y, -1.0, 1.0)) * 0.31830989 + 0.5;
-    vec3 color = texture2D(uMap, vec2(u, v)).rgb * uGain;
-    color = color / (vec3(1.0) + color);
-    gl_FragColor = vec4(color, 1.0);
-  }
-`
-
 const EARTH_VERT = `
   varying vec2 vUv;
   varying vec3 vNormal;
@@ -69,15 +46,15 @@ const EARTH_FRAG = `
     float day = smoothstep(-0.04, 0.3, ndotl);
     vec3 dayColor = texture2D(uDay, vUv).rgb;
     vec3 nightColor = texture2D(uNight, vUv).rgb;
-    float nightGate = smoothstep(0.22, -0.18, ndotl);
-    vec3 color = dayColor * (0.015 + 0.985 * day);
-    color += nightColor * nightGate * 3.4;
+    float nightGate = smoothstep(0.15, -0.22, ndotl);
+    vec3 color = dayColor * (0.02 + 0.98 * day);
+    color += nightColor * nightGate * 1.15;
     float ocean = texture2D(uSpec, vUv).r;
     vec3 halfDir = normalize(sunDir + viewDir);
-    float glint = pow(max(dot(normal, halfDir), 0.0), 72.0);
-    color += vec3(1.0, 0.98, 0.9) * glint * ocean * day * 1.5;
-    float fres = pow(1.0 - max(dot(normal, viewDir), 0.0), 5.0);
-    color += vec3(0.5, 0.78, 1.0) * fres * (0.2 + 0.8 * day) * 0.45;
+    float glint = pow(max(dot(normal, halfDir), 0.0), 280.0);
+    color += vec3(1.0, 0.98, 0.94) * glint * ocean * day * 0.18;
+    float fres = pow(1.0 - max(dot(normal, viewDir), 0.0), 6.5);
+    color += vec3(0.45, 0.72, 1.0) * fres * (0.15 + 0.85 * day) * 0.08;
     gl_FragColor = linearToOutputTexel(vec4(toneMapping(color), 1.0));
   }
 `
@@ -94,8 +71,8 @@ const CLOUD_FRAG = `
     float light = smoothstep(-0.22, 0.42, dot(normal, sunDir));
     float mask = texture2D(uCloud, vUv).g;
     float alpha = smoothstep(0.16, 0.7, mask) * (0.22 + 0.78 * light);
-    vec3 color = vec3(0.95, 0.97, 1.0) * (0.28 + 0.9 * light);
-    gl_FragColor = linearToOutputTexel(vec4(toneMapping(color), alpha * 0.92));
+    vec3 color = vec3(0.9, 0.93, 0.98) * (0.2 + 0.55 * light);
+    gl_FragColor = linearToOutputTexel(vec4(toneMapping(color), alpha * 0.72));
   }
 `
 
@@ -141,13 +118,94 @@ type BodySpec = {
 }
 
 const BODIES: BodySpec[] = [
-  { id: 'mercury', map: '/textures/mercury.webp', radius: 0.22, distance: 4.3, offset: -0.55, spin: 0.05, tilt: 0.01, roughness: 0.95 },
-  { id: 'venus', map: '/textures/venus.webp', radius: 0.48, distance: 6.2, offset: -0.26, spin: 0.02, tilt: 0.05, roughness: 0.7, atmo: { color: 0xf0ddb0, scale: 1.03, strength: 0.7 } },
-  { id: 'earth', map: '/textures/earth-day.webp', radius: 0.62, distance: 8.55, offset: 0, spin: 0.18, tilt: 0.41, roughness: 0.55 },
-  { id: 'mars', map: '/textures/mars.webp', radius: 0.36, distance: 10.5, offset: 0.13, spin: 0.16, tilt: 0.44, roughness: 0.92, atmo: { color: 0xd07a58, scale: 1.025, strength: 0.4 } },
-  { id: 'jupiter', map: '/textures/jupiter.webp', radius: 1.22, distance: 13.1, offset: 0.26, spin: 0.32, tilt: 0.05, roughness: 0.55, atmo: { color: 0xe6d2b4, scale: 1.02, strength: 0.28 } },
-  { id: 'saturn', map: '/textures/saturn.webp', radius: 1.02, distance: 16.0, offset: 0.4, spin: 0.28, tilt: 0.47, roughness: 0.55, rings: true, atmo: { color: 0xf0ddb8, scale: 1.025, strength: 0.26 } },
+  { id: 'mercury', map: '/textures/mercury.webp', radius: 0.18, distance: 1, offset: 0, spin: 0.05, tilt: 0.01, roughness: 0.98 },
+  { id: 'venus', map: '/textures/venus.webp', radius: 0.42, distance: 1, offset: 0, spin: 0.02, tilt: 0.05, roughness: 0.96, atmo: { color: 0xf0ddb0, scale: 1.02, strength: 0.16 } },
+  { id: 'earth', map: '/textures/earth-day.webp', radius: 0.62, distance: 1, offset: 0, spin: 0.18, tilt: 0.41, roughness: 0.72 },
+  { id: 'mars', map: '/textures/mars.webp', radius: 0.32, distance: 1, offset: 0, spin: 0.16, tilt: 0.44, roughness: 0.96, atmo: { color: 0xd07a58, scale: 1.02, strength: 0.16 } },
+  { id: 'jupiter', map: '/textures/jupiter.webp', radius: 1.05, distance: 1, offset: 0, spin: 0.32, tilt: 0.05, roughness: 0.94, atmo: { color: 0xe6d2b4, scale: 1.015, strength: 0.1 } },
+  { id: 'saturn', map: '/textures/saturn.webp', radius: 0.88, distance: 1, offset: 0, spin: 0.28, tilt: 0.47, roughness: 0.94, rings: true, atmo: { color: 0xf0ddb8, scale: 1.015, strength: 0.08 } },
 ]
+
+const PLACED: Record<string, [number, number, number]> = {
+  mercury: [-18, 6, 55],
+  venus: [-8, -4, 48],
+  earth: [4.15, 0.15, 0.12],
+  mars: [8.4, -4.6, 0.25],
+  jupiter: [13.4, -9.2, 0.05],
+  saturn: [20.2, -14.2, 0.35],
+}
+
+// Each scroll stop frames one planet in the open lane on the right.
+// The in-between poses only pitch, so the planet leaves through the top
+// of that lane before the camera yaws toward the next one.
+const SHOTS: { t: number; pos: [number, number, number]; look: [number, number, number]; ndc: number }[] = [
+  { t: 0, pos: [0.8, 0.35, 4.85], look: [4.15, 0.15, 0.12], ndc: 0.56 },
+  { t: 0.08, pos: [0.8, -1.25, 4.85], look: [4.15, -2.65, 0.12], ndc: 0.56 },
+  { t: 0.18, pos: [5.22, -4.41, 4.74], look: [8.4, -4.6, 0.25], ndc: 0.58 },
+  { t: 0.36, pos: [5.22, -6.61, 4.74], look: [8.4, -8.0, 0.25], ndc: 0.58 },
+  { t: 0.48, pos: [7.87, -8.87, 7.85], look: [13.4, -9.2, 0.05], ndc: 0.56 },
+  { t: 0.72, pos: [7.87, -11.47, 7.85], look: [13.4, -13.0, 0.05], ndc: 0.56 },
+  { t: 1, pos: [13.0, -13.77, 10.52], look: [20.2, -14.2, 0.35], ndc: 0.6 },
+]
+
+const STAR_VERT = `
+  attribute vec3 color;
+  attribute float aSize;
+  varying vec3 vColor;
+  void main() {
+    vColor = color;
+    vec4 mv = modelViewMatrix * vec4(position, 1.0);
+    gl_PointSize = clamp(aSize * (140.0 / -mv.z), 0.7, 2.15);
+    gl_Position = projectionMatrix * mv;
+  }
+`
+
+const STAR_FRAG = `
+  varying vec3 vColor;
+  void main() {
+    vec2 p = gl_PointCoord - vec2(0.5);
+    float d = length(p);
+    if (d > 0.5) discard;
+    float core = smoothstep(0.5, 0.08, d);
+    gl_FragColor = vec4(vColor, core);
+  }
+`
+
+function makeStars(count: number) {
+  const positions = new Float32Array(count * 3)
+  const colors = new Float32Array(count * 3)
+  const sizes = new Float32Array(count)
+  for (let index = 0; index < count; index += 1) {
+    const y = 1 - (index / Math.max(1, count - 1)) * 2
+    const ring = Math.sqrt(Math.max(0, 1 - y * y))
+    const theta = Math.PI * (3 - Math.sqrt(5)) * index
+    const radius = 260
+    positions[index * 3] = Math.cos(theta) * ring * radius
+    positions[index * 3 + 1] = y * radius
+    positions[index * 3 + 2] = Math.sin(theta) * ring * radius
+    const warm = Math.random()
+    const tint = warm > 0.92 ? [1, 0.86, 0.7] : warm > 0.78 ? [0.75, 0.84, 1] : [0.92, 0.94, 1]
+    const gain = 0.55 + Math.pow(Math.random(), 4) * 0.45
+    colors[index * 3] = tint[0] * gain
+    colors[index * 3 + 1] = tint[1] * gain
+    colors[index * 3 + 2] = tint[2] * gain
+    sizes[index] = Math.random() > 0.97 ? 2.4 : 0.7 + Math.random() * 1.1
+  }
+  const geometry = new THREE.BufferGeometry()
+  geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3))
+  geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3))
+  geometry.setAttribute('aSize', new THREE.BufferAttribute(sizes, 1))
+  const material = new THREE.ShaderMaterial({
+    vertexShader: STAR_VERT,
+    fragmentShader: STAR_FRAG,
+    transparent: true,
+    depthWrite: false,
+    toneMapped: false,
+  })
+  const points = new THREE.Points(geometry, material)
+  points.renderOrder = -1
+  return points
+}
 
 function smoother(value: number) {
   const t = Math.min(1, Math.max(0, value))
@@ -177,21 +235,8 @@ function glowSprite() {
     toneMapped: false,
   })
   const sprite = new THREE.Sprite(material)
-  sprite.scale.set(6.5, 6.5, 1)
+  sprite.scale.set(4.2, 4.2, 1)
   return sprite
-}
-
-function orbitLine(distance: number) {
-  const points: THREE.Vector3[] = []
-  for (let index = 0; index <= 180; index += 1) {
-    const angle = (index / 180) * Math.PI * 2
-    points.push(new THREE.Vector3(Math.cos(angle) * distance, 0, Math.sin(angle) * distance))
-  }
-  const geometry = new THREE.BufferGeometry().setFromPoints(points)
-  const material = new THREE.LineBasicMaterial({ color: 0xc9d6ec, transparent: true, opacity: 0 })
-  const line = new THREE.Line(geometry, material)
-  line.visible = false
-  return line
 }
 
 function shiftLook(pos: THREE.Vector3, look: THREE.Vector3, ndcX: number, ndcY: number, fov: number, aspect: number) {
@@ -234,9 +279,9 @@ export function mountCosmos(
 
   renderer.outputColorSpace = THREE.SRGBColorSpace
   renderer.toneMapping = THREE.ACESFilmicToneMapping
-  renderer.toneMappingExposure = 1.05
+  renderer.toneMappingExposure = 0.58
   renderer.setClearColor(0x02030a, 1)
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, options.mobile ? 1 : 1.35))
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, options.mobile ? 1 : 1.25))
 
   const scene = new THREE.Scene()
   const camera = new THREE.PerspectiveCamera(34, 1, 0.05, 900)
@@ -253,28 +298,24 @@ export function mountCosmos(
     return texture
   }
 
-  const skyMap = loadMap('/textures/milky-way.webp', THREE.NoColorSpace)
-  skyMap.wrapS = THREE.ClampToEdgeWrapping
-  skyMap.generateMipmaps = false
-  skyMap.minFilter = THREE.LinearFilter
+  const skyMap = loadMap('/textures/milky-way.webp', THREE.SRGBColorSpace)
+  skyMap.mapping = THREE.EquirectangularReflectionMapping
+  skyMap.colorSpace = THREE.SRGBColorSpace
+  skyMap.anisotropy = anisotropy
+  skyMap.minFilter = THREE.LinearMipmapLinearFilter
   skyMap.magFilter = THREE.LinearFilter
-  const sky = new THREE.Mesh(
-    new THREE.SphereGeometry(520, options.mobile ? 80 : 192, options.mobile ? 40 : 96),
-    new THREE.ShaderMaterial({
-      vertexShader: SKY_VERT,
-      fragmentShader: SKY_FRAG,
-      uniforms: { uMap: { value: skyMap }, uGain: { value: options.mobile ? 8 : 11 } },
-      side: THREE.BackSide,
-      depthWrite: false,
-      toneMapped: false,
-    }),
-  )
-  sky.rotation.z = 1.05
-  sky.rotation.y = 0.35
-  sky.frustumCulled = false
-  sky.renderOrder = -2
-  scene.add(sky)
-  disposables.push({ geometry: sky.geometry as THREE.BufferGeometry, material: sky.material as THREE.Material, texture: skyMap })
+  skyMap.generateMipmaps = true
+  scene.background = skyMap
+  // Blurriness above 0 switches three.js onto a low-resolution PMREM and
+  // flattens this dark map to black. The cube conversion keeps the 4k detail.
+  scene.backgroundIntensity = 1
+  scene.backgroundBlurriness = 0
+  scene.backgroundRotation.set(0.28, 1.05, 0.55)
+  disposables.push({ texture: skyMap })
+
+  const stars = makeStars(options.mobile ? 900 : 2800)
+  scene.add(stars)
+  disposables.push({ geometry: stars.geometry as THREE.BufferGeometry, material: stars.material as THREE.Material })
 
   const sunGlow = glowSprite()
   if (sunGlow) scene.add(sunGlow)
@@ -303,7 +344,6 @@ export function mountCosmos(
     clouds?: THREE.Mesh
   }
   const runtime: Runtime[] = []
-  const orbitLines: THREE.Line[] = []
   let layer = 1
   let earthLayer = 1
   const segments = options.mobile ? 36 : 64
@@ -332,7 +372,7 @@ export function mountCosmos(
     pivot.add(spin)
     scene.add(pivot)
 
-    const light = new THREE.DirectionalLight(0xfff4e4, 4.6)
+    const light = new THREE.DirectionalLight(0xfff2e0, 1.55)
     light.layers.set(layer)
     light.target = pivot
     scene.add(light)
@@ -367,13 +407,13 @@ export function mountCosmos(
       spin.add(clouds)
       disposables.push({ geometry: clouds.geometry as THREE.BufferGeometry, material: cloudMat, texture: cloudTex }, { texture: night }, { texture: specMap }, { texture: day })
 
-      const inner = makeAtmo(0xb7dcff, 7.2, 1.05)
+      const inner = makeAtmo(0xb7dcff, 8.4, 0.28)
       const innerShell = new THREE.Mesh(new THREE.SphereGeometry(spec.radius * 1.02, segments, Math.round(segments * 0.7)), inner)
       innerShell.userData.id = 'earth'
       innerShell.renderOrder = 3
       spin.add(innerShell)
       rayTargets.push(innerShell)
-      const outer = makeAtmo(0x8ec4ff, 2.6, 0.22)
+      const outer = makeAtmo(0x8ec4ff, 3.4, 0.04)
       const outerShell = new THREE.Mesh(new THREE.SphereGeometry(spec.radius * 1.07, segments, Math.round(segments * 0.6)), outer)
       outerShell.renderOrder = 3
       spin.add(outerShell)
@@ -436,11 +476,6 @@ export function mountCosmos(
       disposables.push({ geometry: ringGeo, material: ringMat, texture: ringTex })
     }
 
-    if (!options.mobile) {
-      const line = orbitLine(spec.distance)
-      orbitLines.push(line)
-      scene.add(line)
-    }
     runtime.push({ id: spec.id, spec, pivot, spin, light, sunUniform, clouds })
     layer += 1
   }
@@ -465,13 +500,11 @@ export function mountCosmos(
   const desiredPos = new THREE.Vector3(8, 2, 6)
   const desiredLook = new THREE.Vector3()
   const lookCurrent = new THREE.Vector3()
-  const earthPos = new THREE.Vector3()
   const focusPos = new THREE.Vector3()
   const posePos = new THREE.Vector3()
   const poseLook = new THREE.Vector3()
   const spherical = new THREE.Spherical()
   const clock = new THREE.Clock()
-  const up = new THREE.Vector3(0, 1, 0)
   let smoothProgress = 0
   let yaw = 0
   let pitch = 0
@@ -496,23 +529,19 @@ export function mountCosmos(
   }
 
   const placeBodies = (time: number) => {
-    const theta = 0.42 + (options.reduced ? 0 : time * 0.012)
     for (const body of runtime) {
-      const angle = theta + body.spec.offset
-      body.pivot.position.set(Math.cos(angle) * body.spec.distance, 0, Math.sin(angle) * body.spec.distance)
+      const spot = PLACED[body.id]
+      body.pivot.position.set(spot[0], spot[1], spot[2])
       if (!options.reduced) body.spin.rotation.y = time * body.spec.spin
-      body.light.position.set(0, 0.2, 0)
+      body.light.position.set(0, 0.15, 0)
       if (body.sunUniform) body.sunUniform.value.copy(body.pivot.position).negate().normalize()
-      if (body.clouds && !options.reduced) body.clouds.rotation.y = time * 0.02
+      if (body.clouds && !options.reduced) body.clouds.rotation.y = time * 0.015
     }
-    if (moonMesh && earth) {
-      const spin = options.reduced ? 1.1 : 1.1 + time * 0.12
-      const sideX = -Math.sin(theta)
-      const sideZ = Math.cos(theta)
-      moonMesh.position.set(sideX * -0.2, 1.08, sideZ * -0.2)
-      moonMesh.rotation.y = spin
+    if (moonMesh) {
+      moonMesh.position.set(0.32, 1.08, 0.18)
+      moonMesh.rotation.y = options.reduced ? 0.4 : time * 0.08
     }
-    sun.rotation.y = options.reduced ? 0 : time * 0.02
+    sun.rotation.y = options.reduced ? 0 : time * 0.015
   }
 
   const frameCamera = (delta: number) => {
@@ -525,41 +554,17 @@ export function mountCosmos(
     focusMix += (wantFocus - focusMix) * (1 - Math.exp(-delta * 3.2))
     if (focusMix < 0.001) focusMix = 0
 
-    earth?.pivot.getWorldPosition(earthPos)
-    const toSun = earthPos.clone().negate()
-    if (toSun.lengthSq() < 1e-6) toSun.set(1, 0, 0)
-    toSun.normalize()
-    const side = new THREE.Vector3().crossVectors(up, toSun).normalize()
-
-    const heroPos = earthPos.clone().addScaledVector(toSun, 4.9).addScaledVector(side, 3.5).add(new THREE.Vector3(0, 0.72, 0))
-    const heroLook = earthPos.clone().add(new THREE.Vector3(0, 0.02, 0))
-    const midPos = earthPos.clone().addScaledVector(toSun, 12.2).addScaledVector(side, -0.3).add(new THREE.Vector3(0, 4.5, 0))
-    const midLook = earthPos.clone().addScaledVector(side, 2.0).add(new THREE.Vector3(0, 0.15, 0))
-    const widePos = earthPos.clone().addScaledVector(toSun, 14).addScaledVector(side, -1.2).add(new THREE.Vector3(0, 5.6, 0))
-    const wideLook = earthPos.clone().addScaledVector(side, 2.3).add(new THREE.Vector3(0, 0.25, 0))
-    const farPos = earthPos.clone().addScaledVector(toSun, 20).addScaledVector(side, -2.4).add(new THREE.Vector3(0, 8.2, 0))
-    const farLook = earthPos.clone().addScaledVector(side, 3.1).add(new THREE.Vector3(0, 0.35, 0))
-
-    const keys = [0, 0.3, 0.62, 1]
-    const positions = [heroPos, midPos, widePos, farPos]
-    const looks = [heroLook, midLook, wideLook, farLook]
-    const lane = options.mobile ? 0.08 : 1
-    const ndc = [
-      { x: 0.5 * lane, y: options.mobile ? 0.28 : 0.02 },
-      { x: 0.52 * lane, y: 0.06 },
-      { x: 0.52 * lane, y: 0.05 },
-      { x: 0.5 * lane, y: 0.04 },
-    ]
+    const lane = options.mobile ? 0.42 : 1
     let index = 0
-    if (smoothProgress >= keys[2]) index = 2
-    else if (smoothProgress >= keys[1]) index = 1
-    const span = keys[index + 1] - keys[index]
-    const blend = smoother((smoothProgress - keys[index]) / span)
-    posePos.copy(positions[index]).lerp(positions[index + 1], blend)
-    poseLook.copy(looks[index]).lerp(looks[index + 1], blend)
-    const ndcX = ndc[index].x + (ndc[index + 1].x - ndc[index].x) * blend
-    const ndcY = ndc[index].y + (ndc[index + 1].y - ndc[index].y) * blend
-    shiftLook(posePos, poseLook, ndcX, ndcY, camera.fov, camera.aspect)
+    for (let key = 0; key < SHOTS.length - 1; key += 1) {
+      if (smoothProgress >= SHOTS[key].t) index = key
+    }
+    const span = SHOTS[index + 1].t - SHOTS[index].t
+    const blend = smoother((smoothProgress - SHOTS[index].t) / span)
+    posePos.fromArray(SHOTS[index].pos).lerp(new THREE.Vector3().fromArray(SHOTS[index + 1].pos), blend)
+    poseLook.fromArray(SHOTS[index].look).lerp(new THREE.Vector3().fromArray(SHOTS[index + 1].look), blend)
+    const ndcX = (SHOTS[index].ndc + (SHOTS[index + 1].ndc - SHOTS[index].ndc) * blend) * lane
+    shiftLook(posePos, poseLook, ndcX, options.mobile ? 0.16 : 0, camera.fov, camera.aspect)
 
     desiredPos.copy(posePos)
     desiredLook.copy(poseLook)
@@ -592,13 +597,6 @@ export function mountCosmos(
     camera.position.lerp(desiredPos, damp)
     lookCurrent.lerp(desiredLook, damp)
     camera.lookAt(lookCurrent)
-
-    const lineOpacity = smoother((smoothProgress - 0.34) / 0.2) * 0.16
-    for (const line of orbitLines) {
-      const material = line.material as THREE.LineBasicMaterial
-      material.opacity = lineOpacity
-      line.visible = lineOpacity > 0.02
-    }
   }
 
   const pick = (clientX: number, clientY: number) => {
@@ -626,8 +624,8 @@ export function mountCosmos(
     frameCamera(delta)
     renderer.render(scene, camera)
     const cost = performance.now() - now
-    if (cost > 42 && pixel > 0.7) {
-      pixel = Math.max(0.7, pixel * 0.85)
+    if (cost > 48 && pixel > 1) {
+      pixel = Math.max(1, pixel * 0.85)
       renderer.setPixelRatio(pixel)
     }
   }
@@ -708,6 +706,7 @@ export function mountCosmos(
         item.material?.dispose()
         item.texture?.dispose()
       }
+      scene.background = null
       renderer.dispose()
       canvas.remove()
       delete host.dataset.ready
