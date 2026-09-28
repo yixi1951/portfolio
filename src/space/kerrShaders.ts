@@ -97,17 +97,18 @@ export const KERR_FRAG = `
         vec3 getStars(vec3 rd) {
             vec3 col = vec3(0.0);
             float size = clamp(u_starSize, 0.4, 2.2);
-            col += starLayer(rd, 70.0, 0.9965, 0.055 * size, 1.15);
-            col += starLayer(rd, 160.0, 0.9982, 0.034 * size, 1.7);
-            col += starLayer(rd, 340.0, 0.99915, 0.02 * size, 2.3);
+            // Sparse. Dense cutoffs turn the sky into a hash grid or a blue wash.
+            col += starLayer(rd, 36.0, 0.9945, 0.085 * size, 6.5);
+            col += starLayer(rd, 84.0, 0.9976, 0.05 * size, 9.0);
+            col += starLayer(rd, 190.0, 0.99915, 0.028 * size, 13.0);
 
-            // Faint, smooth Milky Way. Low-frequency only, so lensing bends a band instead of a noise grid.
+            // Faint Milky Way. Low frequency so lensing bends a band, not a noise grid.
             vec3 pole = normalize(vec3(0.22, 0.9, 0.16));
             float lat = dot(rd, pole);
-            float band = exp(-lat * lat * 22.0);
-            float dust = noise(rd * 2.4 + vec3(2.0, 0.4, 1.0));
-            float lane = smoothstep(0.28, 0.72, noise(rd * 1.6 + vec3(5.0, 1.2, 0.3)));
-            vec3 milk = vec3(0.62, 0.68, 0.92) * band * (0.05 + 0.16 * dust) * (0.45 + 0.55 * lane);
+            float band = exp(-lat * lat * 26.0);
+            float dust = noise(rd * 2.8 + vec3(2.0, 0.4, 1.0));
+            float lane = smoothstep(0.38, 0.82, noise(rd * 1.5 + vec3(5.0, 1.2, 0.3)));
+            vec3 milk = vec3(0.8, 0.84, 1.0) * band * (0.035 + 0.07 * dust) * (0.45 + 0.55 * lane);
             col += milk;
             return col;
         }
@@ -170,6 +171,8 @@ export const KERR_FRAG = `
             vec3 col = vec3(0.0);
             float transmittance = 1.0;
             bool hitBlackHole = false;
+            float minR = 100.0;
+            float ringTrans = 1.0;
 
             float a_star = u_spin;
             float a_param = u_spin * GM;
@@ -184,9 +187,13 @@ export const KERR_FRAG = `
 
                 if (r < r_plus) { hitBlackHole = true; break; }
                 if (r > 100.0) break;
+                if (r < minR) {
+                    minR = r;
+                    ringTrans = transmittance;
+                }
 
                 // Volumetrically Thick Disk Profile (Puffed up near ISCO)
-                float profileThickness = 0.14 + u_diskPuffiness * 0.5 * exp(-pow(r - r_isco - 1.0, 2.0) * 0.35);
+                float profileThickness = 0.07 + u_diskPuffiness * 0.22 * exp(-pow(r - r_isco - 1.0, 2.0) * 0.35);
                 bool inDisk = abs(p.y) < profileThickness && r > r_plus && r < DISK_OUTER;
                 float currentStep;
 
@@ -205,7 +212,8 @@ export const KERR_FRAG = `
                 }
 
                 if (inDisk) {
-                    float verticalFade = smoothstep(profileThickness, 0.0, abs(p.y));
+                    float core = smoothstep(profileThickness, profileThickness * 0.2, abs(p.y));
+                    float verticalFade = core * core;
                     float radialFade = pow(3.0 / r, 0.85) * smoothstep(DISK_OUTER, 6.2, r);
                     float fadeProduct = verticalFade * radialFade;
 
@@ -214,13 +222,21 @@ export const KERR_FRAG = `
                         float twistAngle = -u_time * (3.0 / r) * timeDilation;
                         mat2 twistRot = mat2(cos(twistAngle), -sin(twistAngle), sin(twistAngle), cos(twistAngle));
                         vec2 swirledXZ = twistRot * p.xz;
-                        vec3 pRot = vec3(swirledXZ.x, p.y * 2.2, swirledXZ.y);
+                        vec3 pRot = vec3(swirledXZ.x, p.y * 6.0, swirledXZ.y);
 
-                        // Large-scale spiral plus low-frequency turbulence. High powers of fbm read as grain.
-                        float spiral = 0.62 + 0.38 * sin(4.5 * atan(p.z, p.x) - 1.15 * r + twistAngle * 0.2);
-                        float n = fbm_warped(pRot * 0.62);
-                        n = smoothstep(0.18, 0.82, n);
-                        float density = (0.42 + 0.58 * n) * spiral * fadeProduct * 5.5;
+                        // Spiral by rotating with log(radius). Cartesian, so the disk has no atan2 branch cut.
+                        float armPhase = 1.55 * log(max(r, 0.45));
+                        float cArm = cos(armPhase);
+                        float sArm = sin(armPhase);
+                        vec2 armXZ = mat2(cArm, -sArm, sArm, cArm) * swirledXZ;
+                        vec3 pArm = vec3(armXZ.x, p.y * 8.0, armXZ.y);
+
+                        float broad = fbm_warped(pRot * 1.15);
+                        float fine = fbm_high(pArm * 2.8);
+                        float filaments = smoothstep(0.58, 0.66, fine);
+                        float lanes = smoothstep(0.62, 0.71, fbm_high(vec3(armXZ.x * 1.6, 0.2, armXZ.y * 0.42)));
+                        float n = broad * 0.32 + filaments * 1.65 + lanes * 0.95;
+                        float density = max(n, 0.0) * fadeProduct * 8.0;
 
                         if (r < r_isco) density *= smoothstep(r_plus, r_isco, r) * 0.15;
 
@@ -272,6 +288,15 @@ export const KERR_FRAG = `
                 vec3 bgCol = getStars(invTilt * rd);
                 float bg_redshift = sqrt(max(0.0001, 1.0 - (2.0*GM) / length(u_cameraPos)));
                 col += transmittance * bgCol * bg_redshift;
+
+                // Thin photon ring on the shadow limb. Glow sits outside the orbit so it does not fill the hole.
+                float photonR = 1.5;
+                float dRing = minR - photonR;
+                float ring = exp(-dRing * dRing / 0.0016);
+                float lip = exp(-max(dRing, 0.0) * max(dRing, 0.0) / 0.008) * 0.16;
+                if (minR > r_plus + 0.05 && minR < 1.85 && ringTrans > 0.4) {
+                    col += vec3(1.45, 1.18, 0.92) * (ring * 16.0 + lip) * ringTrans;
+                }
             }
 
             // NOTE: Removed ACES and Gamma. Outputting RAW HDR data to the Render Target!
@@ -331,7 +356,7 @@ export const KERR_POST_FRAG = `
 
             // Smooth Golden Ratio Spiral Blur (Eliminates dotted artifacts)
             float goldenAngle = 2.39996323;
-            float radiusScale = 5.0;
+            float radiusScale = 2.2;
 
             for(int i = 1; i <= 32; i++) {
                 float r = sqrt(float(i)) * texel.y * radiusScale;
@@ -351,8 +376,10 @@ export const KERR_POST_FRAG = `
             vec3 flare = vec3(0.0);
 
             // --- Composite the Layers ---
-            // u_master is exposure. The ray marcher writes raw HDR, so scale it before ACES.
-            vec3 finalCol = baseCol * u_master + bloom * u_bloomStrength + flare * u_flareStrength;
+            // u_master is exposure. Gate bloom by the local image so it cannot fog the shadow.
+            float baseLum = dot(baseCol, vec3(0.2126, 0.7152, 0.0722));
+            float bloomGate = smoothstep(0.02, 0.12, baseLum);
+            vec3 finalCol = baseCol * u_master + bloom * u_bloomStrength * bloomGate + flare * u_flareStrength;
 
             // --- 4. Apply Vignette Mask ---
             float vignette = 1.0 - distSq * 0.08;

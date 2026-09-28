@@ -78,7 +78,7 @@ export function mountKerrHole(
       u_cameraRight: { value: new THREE.Vector3() },
       u_spin: { value: 0.62 },
       u_tilt: { value: GM_TILT },
-      u_diskPuffiness: { value: 0.42 },
+      u_diskPuffiness: { value: 0.26 },
       u_turbulence: { value: 0.22 },
       u_stepScale: { value: options.mobile ? 1.55 : 1.05 },
       u_starSize: { value: 1.15 },
@@ -228,7 +228,7 @@ export function mountKerrHole(
     const sample = (sampleIndex % 8) + 1
     material.uniforms.u_jitter.value.set(halton(sample, 2) - 0.5, halton(sample, 3) - 0.5)
     const moving = dragging || Math.abs(azimuthV) > 0.0004 || Math.abs(polarV) > 0.0004
-    mixMaterial.uniforms.u_alpha.value = moving || warmed < 2 ? 1 : 0.28
+    mixMaterial.uniforms.u_alpha.value = moving || warmed < 2 ? 1 : 0.94
     renderer.setRenderTarget(target)
     renderer.render(scene, renderCamera)
     renderer.setRenderTarget(blended)

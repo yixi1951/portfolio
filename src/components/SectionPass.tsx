@@ -1,18 +1,32 @@
 import { motion, useReducedMotion } from 'framer-motion'
-import { useEffect, useState, type CSSProperties, type ReactNode } from 'react'
+import { useEffect, useId, useState, type CSSProperties, type ReactNode } from 'react'
 
 type Kind = 'ship' | 'streaks' | 'warp'
 
 function Ship() {
+  const uid = useId().replace(/:/g, '')
+  const trail = `ship-trail-${uid}`
+  const glow = `ship-glow-${uid}`
   return (
-    <svg className="pass-ship" viewBox="0 0 140 40" fill="none" aria-hidden>
-      <path d="M38 20 L8 20" stroke="#d7e2ff" strokeWidth="6" strokeLinecap="round" />
-      <path d="M30 20 L4 14" stroke="#9eb4ff" strokeWidth="2" strokeLinecap="round" />
-      <path d="M36 20 L70 20 L82 8 L118 18 L82 32 L70 20 Z" fill="#f4f1e4" />
-      <path d="M82 8 L96 20 L82 32 L90 20 Z" fill="#c9d4ff" />
-      <circle cx="96" cy="20" r="3.2" fill="#14140f" />
-      <path d="M58 20 L48 11 L62 18 Z" fill="#9eb0ff" />
-      <path d="M58 20 L48 29 L62 22 Z" fill="#9eb0ff" />
+    <svg className="pass-ship" viewBox="0 0 180 56" fill="none" aria-hidden>
+      <defs>
+        <linearGradient id={trail} x1="0" y1="28" x2="96" y2="28" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stopColor="#ffb27a" stopOpacity="0" />
+          <stop offset="70%" stopColor="#ffd7ae" stopOpacity="0.35" />
+          <stop offset="100%" stopColor="#fff1d4" stopOpacity="0.85" />
+        </linearGradient>
+        <radialGradient id={glow} cx="0.5" cy="0.5" r="0.5">
+          <stop offset="0%" stopColor="#fff6df" stopOpacity="0.95" />
+          <stop offset="35%" stopColor="#ffb15a" stopOpacity="0.55" />
+          <stop offset="100%" stopColor="#ff7a3a" stopOpacity="0" />
+        </radialGradient>
+      </defs>
+      <path d="M6 28 C36 26 68 28 98 28" stroke={`url(#${trail})`} strokeWidth="3.2" strokeLinecap="round" />
+      <ellipse cx="104" cy="28" rx="22" ry="9" fill={`url(#${glow})`} />
+      <path d="M108 28 L168 28 L154 18.5 L132 21 L120 14 L112 24 Z" fill="#f4efe2" />
+      <path d="M108 28 L168 28 L154 37.5 L132 35 L120 42 L112 32 Z" fill="#c5d0e6" />
+      <path d="M146 28 L156 23.5 L162 28 L156 32.5 Z" fill="#1c1e28" />
+      <path d="M118 28 L128 22 L134 28 L128 34 Z" fill="#9eb0d4" />
     </svg>
   )
 }

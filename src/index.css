@@ -152,8 +152,9 @@ a {
   top: 16vh;
   left: 0;
   width: 168px;
-  height: 56px;
+  height: 48px;
   opacity: 0;
+  filter: drop-shadow(0 0 12px rgba(255, 160, 80, 0.4));
   animation: flyby 7.5s linear infinite;
   will-change: transform;
 }
@@ -284,10 +285,11 @@ a {
 
 .pass-ship {
   position: absolute;
-  top: 22%;
+  top: 18%;
   left: 0;
-  width: 132px;
-  height: 38px;
+  width: 148px;
+  height: 46px;
+  filter: drop-shadow(0 0 10px rgba(255, 176, 96, 0.45));
   animation: pass-ship 1.35s cubic-bezier(0.22, 0.7, 0.2, 1) forwards;
 }
 
