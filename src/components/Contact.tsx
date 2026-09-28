@@ -36,9 +36,9 @@ export function Contact() {
 
   return (
     <section id="contact" className="pointer-events-none scroll-mt-24 px-4 py-10 pb-10 md:px-6 md:py-20 md:pb-16">
-      <div className="mx-auto grid max-w-6xl gap-4 lg:grid-cols-[0.9fr_1.1fr]">
+      <div className="stage-copy grid gap-4 lg:grid-cols-[0.9fr_1.1fr]">
         <Reveal>
-        <div className="relative overflow-hidden rounded-3xl border border-white/10 glass-panel p-6 sm:p-8">
+        <div className="relative rounded-3xl border border-white/10 glass-panel p-6 sm:p-8">
           <div className="relative">
           <p className="text-xs font-medium uppercase tracking-[0.22em] text-zinc-400">
             {lang === 'zh' ? '联系' : 'Contact'}
@@ -94,14 +94,14 @@ export function Contact() {
           })}
         </div>
       </div>
-      <footer className="pointer-events-auto mx-auto mt-8 flex max-w-6xl flex-wrap items-center justify-between gap-3 px-1 text-xs text-zinc-500">
+      <footer className="stage-copy pointer-events-auto mt-8 flex flex-wrap items-center justify-between gap-3 px-1 text-xs text-zinc-500">
         <p>
           {profile.name} · {profile.nameEn}
         </p>
         <p className="max-w-xl text-right leading-relaxed">
           {lang === 'zh'
-            ? '行星贴图 Solar System Scope，CC BY 4.0。月球 NASA / LRO，公有领域。'
-            : 'Planet textures: Solar System Scope, CC BY 4.0. Moon: NASA / LRO, public domain.'}
+            ? '行星与银河贴图 Solar System Scope，CC BY 4.0。月球 NASA / LRO，公有领域。'
+            : 'Planet and Milky Way textures: Solar System Scope, CC BY 4.0. Moon: NASA / LRO, public domain.'}
         </p>
       </footer>
     </section>

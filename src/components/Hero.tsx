@@ -11,9 +11,14 @@ export function Hero() {
 
   return (
     <section id="top" className="pointer-events-none px-4 pb-8 pt-6 md:px-6 md:pb-16 md:pt-20">
-      <div className="mx-auto flex min-h-[calc(100svh-6.5rem)] max-w-6xl items-end">
-        <div className="w-full max-w-xl">
-          <div className="glass-panel relative overflow-hidden rounded-3xl border border-white/10 p-6 sm:p-8 md:p-10">
+      <div className="stage-copy flex min-h-[calc(100svh-6.5rem)] items-end">
+        <motion.div
+          className="w-full"
+          initial={reduce ? false : { opacity: 0, y: 32 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
+        >
+          <div className="glass-panel relative rounded-3xl border border-white/10 p-6 sm:p-8 md:p-10">
             <div className="relative z-10 max-w-2xl">
               <p className="text-xs font-medium uppercase tracking-[0.22em] text-zinc-400">
                 {profile.school[lang]} · {profile.role[lang]}
@@ -71,10 +76,16 @@ export function Hero() {
               </div>
             </div>
           </div>
-        </div>
+        </motion.div>
       </div>
 
-      <div className="mx-auto mt-4 grid max-w-6xl gap-4 lg:grid-cols-5">
+      <motion.div
+        className="stage-copy mt-4 grid gap-4 lg:grid-cols-5"
+        initial={reduce ? false : { opacity: 0, y: 36 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: '0px 0px -8% 0px' }}
+        transition={{ duration: 0.9, ease: [0.16, 1, 0.3, 1] }}
+      >
         <div className="pointer-events-auto flex flex-col justify-between rounded-3xl bg-[#e4e0cc] p-6 text-[#16160f] lg:col-span-2">
             <div>
               <p className="text-xs font-medium uppercase tracking-[0.2em] text-black/70">
@@ -109,7 +120,7 @@ export function Hero() {
           </p>
           <p className="mt-4 text-sm text-zinc-400">{profile.location[lang]}</p>
         </div>
-      </div>
+      </motion.div>
     </section>
   )
 }

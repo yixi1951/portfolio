@@ -1,4 +1,4 @@
-Planet maps for the Sun, Mercury, Venus, Earth (day, night, and clouds), Mars, Jupiter, Saturn, and Saturn’s rings are from Solar System Scope.
+Planet maps for the Sun, Mercury, Venus, Earth (day, night, clouds, and ocean specular), Mars, Jupiter, Saturn, and Saturn’s rings are from Solar System Scope. The Milky Way sky is Solar System Scope’s 2k stars_milky_way map. Earth day, night, clouds, and specular are the 2k maps. All of these were resized or recompressed to WebP.
 
 https://www.solarsystemscope.com/textures/
 Creative Commons Attribution 4.0 International (CC BY 4.0)

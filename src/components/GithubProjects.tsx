@@ -78,8 +78,8 @@ function ProjectCard({
     <motion.article
       className="glow-card flex h-full flex-col rounded-3xl border border-white/10 glass-panel p-5 sm:p-6"
       style={{ transformPerspective: 900 }}
-      initial={reduce ? false : { opacity: 0, y: 64, scale: 0.88, filter: 'blur(8px)' }}
-      whileInView={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
+      initial={reduce ? false : { opacity: 0, y: 36 }}
+      whileInView={{ opacity: 1, y: 0 }}
       whileHover={
         reduce
           ? undefined
@@ -200,7 +200,7 @@ export function GithubProjects() {
 
   return (
     <section id="projects" className="pointer-events-none scroll-mt-24 px-4 py-10 md:px-6 md:py-20">
-      <div className="mx-auto max-w-6xl">
+      <div className="stage-copy">
         <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
           <div>
             <p className="text-xs font-medium uppercase tracking-[0.22em] text-zinc-400">{c.label}</p>

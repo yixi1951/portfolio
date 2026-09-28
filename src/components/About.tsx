@@ -8,7 +8,7 @@ export function About() {
 
   return (
     <section id="about" className="pointer-events-none scroll-mt-24 px-4 py-10 md:px-6 md:py-20">
-      <div className="mx-auto grid max-w-6xl gap-4 lg:grid-cols-12">
+      <div className="stage-copy grid gap-4 lg:grid-cols-12">
         <Reveal className="lg:col-span-7">
         <div className="tilt-card glow-card h-full rounded-3xl border border-white/10 glass-panel p-6 sm:p-8">
           <p className="text-xs font-medium uppercase tracking-[0.22em] text-zinc-400">
