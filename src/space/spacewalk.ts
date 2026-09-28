@@ -12,36 +12,32 @@ export function mountSpacewalk(host: HTMLElement, options: { reduced: boolean })
   canvas.className = 'absolute inset-0 h-full w-full'
   host.appendChild(canvas)
 
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: false })
+  host.style.backgroundImage = `url("${EARTH_URL}")`
+  host.style.backgroundSize = 'cover'
+  host.style.backgroundPosition = 'center 82%'
+  host.style.backgroundRepeat = 'no-repeat'
+
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true, alpha: true })
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5))
+  renderer.setClearColor(0x000000, 0)
   renderer.outputColorSpace = THREE.SRGBColorSpace
   renderer.toneMapping = THREE.ACESFilmicToneMapping
-  renderer.toneMappingExposure = 1.05
+  renderer.toneMappingExposure = 1.15
 
   const scene = new THREE.Scene()
-  scene.background = new THREE.Color('#07080d')
   const pmrem = new THREE.PMREMGenerator(renderer)
   scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture
 
   const camera = new THREE.PerspectiveCamera(28, 1, 0.05, 40)
-  camera.position.set(0.35, 0.15, 4.4)
+  camera.position.set(0.42, 0.12, 4.6)
 
-  const sun = new THREE.DirectionalLight('#fff4e4', 3.1)
-  sun.position.set(4.2, 5.4, 3.6)
-  const rim = new THREE.DirectionalLight('#8eb6ff', 1.7)
-  rim.position.set(-4.5, 1.4, -2.2)
-  const fill = new THREE.DirectionalLight('#d7e4ff', 0.45)
-  fill.position.set(-1.2, 2.2, 4)
-  scene.add(sun, rim, fill)
-
-  const earthTex = new THREE.TextureLoader().load(EARTH_URL)
-  earthTex.colorSpace = THREE.SRGBColorSpace
-  const earth = new THREE.Mesh(
-    new THREE.PlaneGeometry(7.2, 4.05),
-    new THREE.MeshBasicMaterial({ map: earthTex }),
-  )
-  earth.position.set(0, -0.35, -2.4)
-  scene.add(earth)
+  const sun = new THREE.DirectionalLight('#fff6ea', 2.6)
+  sun.position.set(3.4, 4.8, 4.2)
+  const rim = new THREE.DirectionalLight('#9eb6ff', 1.35)
+  rim.position.set(-3.6, 1.6, -2.4)
+  const fill = new THREE.DirectionalLight('#f3f6ff', 0.7)
+  fill.position.set(-1.4, 0.4, 3.2)
+  scene.add(sun, rim, fill, new THREE.AmbientLight('#d5e2ff', 0.55))
 
   const rig = new THREE.Group()
   scene.add(rig)
@@ -66,21 +62,29 @@ export function mountSpacewalk(host: HTMLElement, options: { reduced: boolean })
         mesh.castShadow = false
         const materials = Array.isArray(mesh.material) ? mesh.material : [mesh.material]
         for (const material of materials) {
-          const standard = material as THREE.MeshStandardMaterial
-          if (!standard.isMeshStandardMaterial) continue
-          const name = standard.name || ''
+          const physical = material as THREE.MeshPhysicalMaterial
+          if (!physical.isMeshStandardMaterial) continue
+          // The NASA export marks every surface as fully transmissive, which hides the suit.
+          physical.transmission = 0
+          physical.thickness = 0
+          physical.transparent = false
+          physical.opacity = 1
+          physical.depthWrite = true
+          physical.side = THREE.DoubleSide
+          const name = physical.name || ''
           if (name.includes('blinn2')) {
-            standard.color.set('#e6b85c')
-            standard.metalness = 1
-            standard.roughness = 0.06
-            standard.envMapIntensity = 2.6
+            physical.color.set('#e8bc62')
+            physical.metalness = 1
+            physical.roughness = 0.08
+            physical.envMapIntensity = 2.2
           } else if (name.includes('blinn')) {
-            standard.metalness = 0.72
-            standard.roughness = 0.32
-            standard.envMapIntensity = 1.3
+            physical.metalness = 0.35
+            physical.roughness = 0.42
+            physical.envMapIntensity = 1.1
           } else {
-            standard.roughness = Math.min(standard.roughness || 0.7, 0.62)
-            standard.envMapIntensity = 1.05
+            physical.metalness = 0.04
+            physical.roughness = 0.58
+            physical.envMapIntensity = 0.85
           }
         }
       })
@@ -88,7 +92,7 @@ export function mountSpacewalk(host: HTMLElement, options: { reduced: boolean })
       const size = box.getSize(new THREE.Vector3())
       const center = box.getCenter(new THREE.Vector3())
       suit.position.sub(center)
-      suit.scale.setScalar(2.25 / Math.max(size.y, 0.001))
+      suit.scale.setScalar(1.85 / Math.max(size.y, 0.001))
       rig.add(suit)
       host.dataset.ready = 'true'
     },
@@ -191,8 +195,8 @@ export function mountSpacewalk(host: HTMLElement, options: { reduced: boolean })
     host.removeEventListener('pointerleave', onLeave)
     draco.dispose()
     ktx2.dispose()
-    earthTex.dispose()
     pmrem.dispose()
+    host.style.backgroundImage = ''
     renderer.dispose()
     canvas.remove()
     delete host.dataset.ready

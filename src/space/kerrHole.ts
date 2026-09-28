@@ -1,7 +1,7 @@
 import * as THREE from 'three'
 import { KERR_FRAG, KERR_POST_FRAG, KERR_VERT } from './kerrShaders'
 
-const GM_TILT = (16 * Math.PI) / 180
+const GM_TILT = (11 * Math.PI) / 180
 
 export function mountKerrHole(
   host: HTMLElement,
@@ -54,10 +54,10 @@ export function mountKerrHole(
       u_cameraRight: { value: new THREE.Vector3() },
       u_spin: { value: 0.62 },
       u_tilt: { value: GM_TILT },
-      u_diskPuffiness: { value: 0.55 },
-      u_turbulence: { value: 3.2 },
+      u_diskPuffiness: { value: 0.36 },
+      u_turbulence: { value: 0.4 },
       u_stepScale: { value: options.mobile ? 1.7 : 1.25 },
-      u_starSize: { value: 1.4 },
+      u_starSize: { value: 3.2 },
     },
     depthWrite: false,
     depthTest: false,
@@ -71,11 +71,11 @@ export function mountKerrHole(
     uniforms: {
       tDiffuse: { value: target.texture },
       u_resolution: { value: new THREE.Vector2(8, 8) },
-      u_bloomThreshold: { value: 0.35 },
-      u_bloomStrength: { value: 0.55 },
-      u_flareStrength: { value: 0.85 },
-      u_aberration: { value: 0.45 },
-      u_master: { value: 1 },
+      u_bloomThreshold: { value: 0.9 },
+      u_bloomStrength: { value: 0.16 },
+      u_flareStrength: { value: 0.05 },
+      u_aberration: { value: 0.15 },
+      u_master: { value: 0.55 },
     },
     depthWrite: false,
     depthTest: false,
@@ -83,10 +83,10 @@ export function mountKerrHole(
   const postScene = new THREE.Scene()
   postScene.add(new THREE.Mesh(quad, postMaterial))
 
-  const camera = new THREE.PerspectiveCamera(42, 1, 0.1, 100)
-  let radius = 11.2
-  let polar = 1.22
-  let azimuth = 0.18
+  const camera = new THREE.PerspectiveCamera(36, 1, 0.1, 200)
+  let radius = 28
+  let polar = 1.32
+  let azimuth = 0.85
   let polarV = 0
   let azimuthV = 0
   let dragging = false
@@ -142,7 +142,7 @@ export function mountKerrHole(
       polar += polarV
       azimuthV *= 0.92
       polarV *= 0.92
-      polar = Math.max(0.42, Math.min(2.15, polar))
+      polar = Math.max(0.55, Math.min(2.05, polar))
     }
     place()
     const basis = camera.matrixWorld.elements
@@ -197,7 +197,7 @@ export function mountKerrHole(
     const dy = pts[0].y - pts[1].y
     return Math.hypot(dx, dy)
   }
-  const clampRadius = (value: number) => Math.min(28, Math.max(6.2, value))
+  const clampRadius = (value: number) => Math.min(78, Math.max(16, value))
 
   const onDown = (event: PointerEvent) => {
     pointers.set(event.pointerId, { x: event.clientX, y: event.clientY })
@@ -241,7 +241,7 @@ export function mountKerrHole(
     lastX = event.clientX
     lastY = event.clientY
     azimuth -= dx * 0.005
-    polar = Math.max(0.42, Math.min(2.15, polar + dy * 0.0035))
+    polar = Math.max(0.55, Math.min(2.05, polar + dy * 0.0035))
     azimuthV = -dx * 0.0009
     polarV = dy * 0.0005
   }

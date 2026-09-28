@@ -78,7 +78,7 @@ export const KERR_FRAG = `
             vec3 col = vec3(0.0);
             vec3 p1 = rd * 280.0;
             vec3 ip1 = floor(p1);
-            if (hash13(ip1) > 0.994) {
+            if (hash13(ip1) > 0.986) {
                 vec3 fp1 = fract(p1);
                 vec3 offset = vec3(hash13(ip1 + 1.1), hash13(ip1 + 2.2), hash13(ip1 + 3.3)) * 0.6 + 0.2;
                 float r1 = 0.12 * u_starSize;
@@ -86,7 +86,7 @@ export const KERR_FRAG = `
             }
             vec3 p2 = rd * 110.0;
             vec3 ip2 = floor(p2);
-            if (hash13(ip2) > 0.991) {
+            if (hash13(ip2) > 0.972) {
                 vec3 fp2 = fract(p2);
                 vec3 offset = vec3(hash13(ip2 + 5.5), hash13(ip2 + 6.6), hash13(ip2 + 7.7)) * 0.6 + 0.2;
                 float r2 = 0.18 * u_starSize;
@@ -94,7 +94,7 @@ export const KERR_FRAG = `
                 vec3 tint = mix(vec3(0.5, 0.8, 1.0), vec3(1.0, 0.6, 0.4), hash13(ip2 + 8.8));
                 col += vec3(star * (1.5 + 4.0 * hash13(ip2 + 9.9))) * tint;
             }
-            return col;
+            return col * 3.2;
         }
 
         vec3 blackbody(float temp) {
@@ -162,7 +162,7 @@ export const KERR_FRAG = `
             float r_isco = GM * (3.0 + z2 - sqrt(max(0.0, (3.0 - z1)*(3.0 + z1 + 2.0*z2))));
 
             for(int i = 0; i < MAX_STEPS; i++) {
-                if (i == MAX_STEPS - 1) { hitBlackHole = true; break; }
+                if (i == MAX_STEPS - 1) break;
                 float r = length(p);
 
                 if (r < r_plus) { hitBlackHole = true; break; }
@@ -170,7 +170,7 @@ export const KERR_FRAG = `
 
                 // Volumetrically Thick Disk Profile (Puffed up near ISCO)
                 float profileThickness = 0.1 + u_diskPuffiness * 0.4 * exp(-pow(r - r_isco - 1.0, 2.0) * 0.5);
-                bool inDisk = abs(p.y) < profileThickness && r > r_plus && r < 25.0;
+                bool inDisk = abs(p.y) < profileThickness && r > r_plus && r < 9.0;
                 float currentStep;
 
                 if (inDisk) {
@@ -189,7 +189,7 @@ export const KERR_FRAG = `
 
                 if (inDisk) {
                     float verticalFade = smoothstep(profileThickness, 0.0, abs(p.y));
-                    float radialFade = pow(3.0 / r, 1.0) * smoothstep(25.0, 15.0, r);
+                    float radialFade = pow(3.0 / r, 1.0) * smoothstep(9.0, 5.5, r);
                     float fadeProduct = verticalFade * radialFade;
 
                     if (fadeProduct > 0.001) {
@@ -228,7 +228,7 @@ export const KERR_FRAG = `
                 }
 
                 float dt = currentStep;
-                if (r > 25.0) {
+                if (r > 9.0) {
                     p += rd * dt;
                 } else {
                     vec3 k1_p = rd;
@@ -245,7 +245,6 @@ export const KERR_FRAG = `
                     rd = normalize(rd);
                 }
 
-                if (i > MAX_STEPS - 40) transmittance *= 0.75;
                 if (transmittance < 0.01) break;
             }
 
@@ -322,7 +321,7 @@ export const KERR_POST_FRAG = `
                 // Keep the blur perfectly circular regardless of screen stretch
                 offset.x *= u_resolution.y / u_resolution.x;
 
-                vec3 sampleCol = texture2D(tDiffuse, uv + offset).rgb;
+                vec3 sampleCol = texture2D(tDiffuse, uv + offset).rgb * u_master;
                 float weight = exp(-float(i) * 0.08); // Gaussian-like falloff
                 bloom += getBright(sampleCol, u_bloomThreshold) * weight;
                 weightSum += weight;
@@ -337,7 +336,7 @@ export const KERR_POST_FRAG = `
             // Dense, continuous horizontal sweep to eliminate dashed-line artifacts
             for(int x = -25; x <= 25; x++) {
                 vec2 offset = vec2(float(x) * texel.x * flareSpread, 0.0);
-                vec3 sampleCol = texture2D(tDiffuse, uv + offset).rgb;
+                vec3 sampleCol = texture2D(tDiffuse, uv + offset).rgb * u_master;
                 float weight = exp(-abs(float(x)) * 0.1);
                 flare += getBright(sampleCol, u_bloomThreshold) * weight;
                 flareWeightSum += weight;
@@ -346,10 +345,11 @@ export const KERR_POST_FRAG = `
             flare *= vec3(0.2, 0.5, 1.0); // Sci-fi cyan/blue tint
 
             // --- Composite the Layers ---
-            vec3 finalCol = baseCol + (bloom * u_bloomStrength + flare * u_flareStrength) * u_master;
+            // u_master is exposure. The ray marcher writes raw HDR, so scale it before ACES.
+            vec3 finalCol = baseCol * u_master + bloom * u_bloomStrength + flare * u_flareStrength;
 
             // --- 4. Apply Vignette Mask ---
-            float vignette = 1.0 - distSq * 1.5 * u_master;
+            float vignette = 1.0 - distSq * 0.08;
             finalCol *= clamp(vignette, 0.0, 1.0);
 
             // --- Final Tone Mapping (Compress HDR down to Screen SDR) ---
