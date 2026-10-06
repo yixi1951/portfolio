@@ -1,0 +1,60 @@
+<!-- Minimal 3Dmol.js viewer template.
+     Copy this into an HTML artifact. Replace the CID or model block in the marked spot.
+     Three loading strategies are shown (uncomment the one you want). -->
+<div id="viewer" style="width: 100%; height: 500px; position: relative; border: 1px solid #ddd; border-radius: 8px;"></div>
+<div style="margin-top: 8px; font-family: system-ui, sans-serif; font-size: 13px; color: #555;">
+  Drag to rotate · scroll/pinch to zoom · right-click drag to pan
+</div>
+
+<script src="https://3dmol.org/build/3Dmol-min.js"></script>
+<script>
+  const viewer = $3Dmol.createViewer("viewer", { backgroundColor: "white" });
+
+  // ============================================================
+  // STRATEGY A — Load by PubChem CID (easiest for known compounds)
+  // Find the CID at https://pubchem.ncbi.nlm.nih.gov/  (e.g. aspirin = 2244)
+  // ============================================================
+  $3Dmol.download("cid:2244", viewer, {}, () => {
+    viewer.setStyle({}, { stick: { radius: 0.15 }, sphere: { scale: 0.25 } });
+    viewer.zoomTo();
+    viewer.render();
+  });
+
+  // ============================================================
+  // STRATEGY B — Paste a MOL block directly
+  // Generate one with RDKit:
+  //   from rdkit import Chem
+  //   from rdkit.Chem import AllChem
+  //   m = Chem.MolFromSmiles("CCO"); m = Chem.AddHs(m)
+  //   AllChem.EmbedMolecule(m); AllChem.MMFFOptimizeMolecule(m)
+  //   print(Chem.MolToMolBlock(m))
+  // ============================================================
+  /*
+  const molBlock = `
+     RDKit          3D
+     9  8  0  0  0  0  0  0  0  0999 V2000
+     ... paste output here ...
+  M  END`;
+  viewer.addModel(molBlock, "mol");
+  viewer.setStyle({}, { stick: {}, sphere: { scale: 0.25 } });
+  viewer.zoomTo();
+  viewer.render();
+  */
+
+  // ============================================================
+  // STRATEGY C — Load a PDB structure (proteins, complexes)
+  // ============================================================
+  /*
+  $3Dmol.download("pdb:1CRN", viewer, {}, () => {
+    viewer.setStyle({}, { cartoon: { color: "spectrum" } });
+    viewer.zoomTo();
+    viewer.render();
+  });
+  */
+
+  // ============================================================
+  // OPTIONAL — element-colored highlights, labels, surfaces
+  // ============================================================
+  // viewer.addLabel("OH", { position: { x: 0, y: 0, z: 0 }, fontSize: 14, backgroundColor: "white" });
+  // viewer.addSurface($3Dmol.SurfaceType.VDW, { opacity: 0.3, color: "white" });
+</script>
